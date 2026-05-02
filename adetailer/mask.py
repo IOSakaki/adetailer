@@ -29,6 +29,12 @@ class MergeInvert(IntEnum):
 T = TypeVar("T", int, float)
 
 
+def _reindex_if_present(items: list[Any], idx: list[int]) -> list[Any]:
+    if not items:
+        return items
+    return [items[i] for i in idx if i < len(items)]
+
+
 def _dilate(arr: np.ndarray, value: int) -> np.ndarray:
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (value, value))
     return cv2.dilate(arr, kernel, iterations=1)
@@ -203,8 +209,9 @@ def sort_bboxes(
     items = len(pred.bboxes)
     idx = sorted(range(items), key=lambda i: key(pred.bboxes[i]))
     pred.bboxes = [pred.bboxes[i] for i in idx]
-    pred.masks = [pred.masks[i] for i in idx]
-    pred.labels = [pred.labels[i] for i in idx] if pred.labels else pred.labels
+    pred.masks = _reindex_if_present(pred.masks, idx)
+    pred.labels = _reindex_if_present(pred.labels, idx)
+    pred.confidences = _reindex_if_present(pred.confidences, idx)
     return pred
 
 
@@ -225,9 +232,9 @@ def filter_by_ratio(
     items = len(pred.bboxes)
     idx = [i for i in range(items) if is_in_ratio(pred.bboxes[i], low, high, orig_area)]
     pred.bboxes = [pred.bboxes[i] for i in idx]
-    pred.masks = [pred.masks[i] for i in idx]
-    pred.labels = [pred.labels[i] for i in idx] if pred.labels else pred.labels
-    pred.confidences = [pred.confidences[i] for i in idx]
+    pred.masks = _reindex_if_present(pred.masks, idx)
+    pred.labels = _reindex_if_present(pred.labels, idx)
+    pred.confidences = _reindex_if_present(pred.confidences, idx)
     return pred
 
 
@@ -238,9 +245,9 @@ def filter_k_largest(pred: PredictOutput[T], k: int = 0) -> PredictOutput[T]:
     idx = np.argsort(areas)[-k:]
     idx = idx[::-1]
     pred.bboxes = [pred.bboxes[i] for i in idx]
-    pred.masks = [pred.masks[i] for i in idx]
-    pred.labels = [pred.labels[i] for i in idx] if pred.labels else pred.labels
-    pred.confidences = [pred.confidences[i] for i in idx]
+    pred.masks = _reindex_if_present(pred.masks, idx)
+    pred.labels = _reindex_if_present(pred.labels, idx)
+    pred.confidences = _reindex_if_present(pred.confidences, idx)
     return pred
 
 
@@ -250,9 +257,9 @@ def filter_k_most_confident(pred: PredictOutput[T], k: int = 0) -> PredictOutput
     idx = np.argsort(pred.confidences)[-k:]
     idx = idx[::-1]
     pred.bboxes = [pred.bboxes[i] for i in idx]
-    pred.masks = [pred.masks[i] for i in idx]
-    pred.labels = [pred.labels[i] for i in idx] if pred.labels else pred.labels
-    pred.confidences = [pred.confidences[i] for i in idx]
+    pred.masks = _reindex_if_present(pred.masks, idx)
+    pred.labels = _reindex_if_present(pred.labels, idx)
+    pred.confidences = _reindex_if_present(pred.confidences, idx)
     return pred
 
 
