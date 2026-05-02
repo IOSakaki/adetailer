@@ -56,6 +56,8 @@ class ArgsList(UserList):
 class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_model: str = "None"
     ad_model_classes: str = ""
+    ad_sam3_target_selection: Literal["all", "largest", "leftmost", "rightmost"] = "all"
+    ad_sam3_min_mask_area: NonNegativeInt = 0
     ad_tab_enable: bool = True
     ad_prompt: str = ""
     ad_prompt_append: str = ""
@@ -132,6 +134,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop = partial(self.ppop, p)
 
         ppop("ADetailer model classes")
+        ppop("ADetailer SAM3 target selection", cond="all")
+        ppop("ADetailer SAM3 minimum mask area", cond=0)
         ppop("ADetailer prompt")
         ppop("ADetailer prompt append")
         ppop("ADetailer negative prompt")
@@ -227,6 +231,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 _all_args = [
     ("ad_model", "ADetailer model"),
     ("ad_model_classes", "ADetailer model classes"),
+    ("ad_sam3_target_selection", "ADetailer SAM3 target selection"),
+    ("ad_sam3_min_mask_area", "ADetailer SAM3 minimum mask area"),
     ("ad_tab_enable", "ADetailer tab enable"),
     ("ad_prompt", "ADetailer prompt"),
     ("ad_prompt_append", "ADetailer prompt append"),

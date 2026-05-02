@@ -852,6 +852,8 @@ class AfterDetailerScript(scripts.Script):
                     model_name=ad_model,
                     model_dirs=[adetailer_dir, *extra_models_dirs.split("|")],
                     confidence=args.ad_confidence,
+                    target_selection=args.ad_sam3_target_selection,
+                    min_mask_area=args.ad_sam3_min_mask_area,
                 )
             except Exception as e:
                 print(f"[-] ADetailer: {e}")
