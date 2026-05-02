@@ -38,6 +38,7 @@ from adetailer import (
     __version__,
     get_models,
     mediapipe_predict,
+    sam3_predict,
     ultralytics_predict,
 )
 from adetailer.args import (
@@ -837,9 +838,24 @@ class AfterDetailerScript(scripts.Script):
         ad_prompts, ad_negatives = self.get_prompt(p, args)
 
         is_mediapipe = args.is_mediapipe()
+        is_sam3 = args.is_sam3()
 
         if is_mediapipe:
             pred = mediapipe_predict(args.ad_model, pp.image, args.ad_confidence)
+
+        elif is_sam3:
+            ad_model = self.get_ad_model(args.ad_model)
+            try:
+                pred = sam3_predict(
+                    image=pp.image,
+                    text_prompt=args.ad_model_classes,
+                    model_name=ad_model,
+                    model_dirs=[adetailer_dir, *extra_models_dirs.split("|")],
+                    confidence=args.ad_confidence,
+                )
+            except Exception as e:
+                print(f"[-] ADetailer: {e}")
+                return False
 
         else:
             ad_model = self.get_ad_model(args.ad_model)
