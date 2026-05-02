@@ -343,20 +343,6 @@ class AfterDetailerScript(scripts.Script):
 
         return prompt, negative_prompt
 
-    @staticmethod
-    def get_controlnet_crop_image(
-        image: Image.Image, mask: Image.Image, padding: int
-    ) -> Image.Image:
-        bbox = mask.getbbox()
-        if bbox is None:
-            return image
-        x1, y1, x2, y2 = bbox
-        x1 = max(0, x1 - padding)
-        y1 = max(0, y1 - padding)
-        x2 = min(image.width, x2 + padding)
-        y2 = min(image.height, y2 + padding)
-        return image.crop((x1, y1, x2, y2))
-
     def get_seed(self, p) -> tuple[int, int]:
         i = get_i(p)
 
@@ -898,13 +884,11 @@ class AfterDetailerScript(scripts.Script):
             self.fix_p2(p, p2, pp, args, pred, j)
 
             if args.ad_controlnet_model not in ["None", "Passthrough"]:
+                # ON: rely on ADetailer/ReForge's own inpaint crop pipeline.
+                # OFF: explicitly use the full current canvas as ControlNet input.
                 cn_image = None
-                if args.ad_controlnet_use_crop_input:
-                    cn_image = self.get_controlnet_crop_image(
-                        p2.init_images[0],
-                        p2.image_mask,
-                        args.ad_inpaint_only_masked_padding,
-                    )
+                if not args.ad_controlnet_use_crop_input:
+                    cn_image = ensure_pil_image(p2.init_images[0], "RGB")
                 self.update_controlnet_args(p2, args, image=cn_image)
 
             try:
