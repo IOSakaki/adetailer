@@ -10,6 +10,7 @@ from adetailer.args import ADetailerArgs
 from adetailer.common import resolve_sam3_model_path
 from adetailer.sam3 import (
     SAM3DependencyError,
+    _resolve_sam3_model_path,
     _run_sam3_inference,
     sam3_predict,
     sam3_results_to_predict_output,
@@ -23,6 +24,28 @@ def test_args_is_sam3() -> None:
 
 def test_resolve_sam3_model_path_none_when_missing(tmp_path: Path) -> None:
     assert resolve_sam3_model_path("missing.pt", tmp_path) is None
+
+
+def test_resolve_sam3_model_path_from_user_dir(tmp_path: Path) -> None:
+    sam3_dir = tmp_path / "custom"
+    sam3_dir.mkdir()
+    weight = sam3_dir / "sam3_custom.pth"
+    weight.write_text("stub")
+    resolved, searched = _resolve_sam3_model_path("sam3.pt", [], str(sam3_dir))
+    assert resolved == weight
+    assert sam3_dir in searched
+
+
+def test_sam3_predict_missing_message_contains_searched_paths() -> None:
+    image = Image.new("RGB", (32, 32), "white")
+    with pytest.raises(SAM3DependencyError, match="Searched paths:"):
+        sam3_predict(
+            image=image,
+            text_prompt="face",
+            model_name="sam3_missing.pt",
+            model_dirs=["models/sam3"],
+            model_path_input="",
+        )
 
 
 def test_sam3_predict_missing_prompt() -> None:

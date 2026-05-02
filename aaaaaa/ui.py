@@ -97,6 +97,7 @@ def on_ad_model_update(model: str):
             gr.update(visible=True, placeholder="SAM3 text prompt, ex: girl face"),
             gr.update(visible=True),
             gr.update(visible=True),
+            gr.update(visible=True),
         )
     if "-world" in model:
         return (
@@ -106,9 +107,11 @@ def on_ad_model_update(model: str):
             ),
             gr.update(visible=False),
             gr.update(visible=False),
+            gr.update(visible=False),
         )
     return (
         gr.update(visible=False, placeholder=""),
+        gr.update(visible=False),
         gr.update(visible=False),
         gr.update(visible=False),
     )
@@ -236,6 +239,13 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 visible=False,
                 elem_id=eid("ad_sam3_min_mask_area"),
             )
+            w.ad_sam3_model_path = gr.Textbox(
+                label="SAM3 model path" + suffix(n),
+                value="",
+                visible=False,
+                placeholder="Optional absolute path to SAM3 weight file or directory",
+                elem_id=eid("ad_sam3_model_path"),
+            )
 
             w.ad_model.change(
                 on_ad_model_update,
@@ -244,6 +254,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                     w.ad_model_classes,
                     w.ad_sam3_target_selection,
                     w.ad_sam3_min_mask_area,
+                    w.ad_sam3_model_path,
                 ],
                 queue=False,
             )

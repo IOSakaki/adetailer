@@ -6,11 +6,47 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-from adetailer.common import PredictOutput, resolve_sam3_model_path
+from adetailer.common import PredictOutput
 
 
 class SAM3DependencyError(RuntimeError):
     """Raised when SAM3 backend is selected but unavailable."""
+
+
+def _resolve_sam3_model_path(
+    model_name: str, model_dirs: list[str | Path], model_path_input: str
+) -> tuple[Path | None, list[Path]]:
+    searched: list[Path] = []
+    user_input = model_path_input.strip()
+
+    if user_input:
+        user_path = Path(user_input).expanduser()
+        searched.append(user_path)
+        if user_path.is_file():
+            return user_path, searched
+        if user_path.is_dir():
+            for pattern in ("sam3*.pt", "sam3*.pth", "sam3*.safetensors"):
+                for candidate in sorted(user_path.glob(pattern)):
+                    searched.append(candidate)
+                    if candidate.is_file():
+                        return candidate, searched
+            return None, searched
+        return None, searched
+
+    candidate = Path(model_name).expanduser()
+    searched.append(candidate)
+    if candidate.is_file():
+        return candidate, searched
+
+    for dir_ in model_dirs:
+        if not dir_:
+            continue
+        joined = Path(dir_).expanduser() / model_name
+        searched.append(joined)
+        if joined.is_file():
+            return joined, searched
+
+    return None, searched
 
 
 def sam3_predict(
@@ -19,6 +55,7 @@ def sam3_predict(
     text_prompt: str,
     model_name: str,
     model_dirs: list[str | Path] | None = None,
+    model_path_input: str = "",
     confidence: float = 0.3,
     target_selection: str = "all",
     min_mask_area: int = 0,
@@ -38,12 +75,16 @@ def sam3_predict(
             "Set 'ADetailer detector classes' to your SAM3 text query."
         )
 
-    model_path = resolve_sam3_model_path(model_name, *(model_dirs or []))
+    model_path, searched_paths = _resolve_sam3_model_path(
+        model_name, model_dirs or [], model_path_input
+    )
     if model_path is None:
+        searched_str = ", ".join(str(p) for p in searched_paths) or "(none)"
         raise SAM3DependencyError(
             "ADetailer SAM3 backend is selected, but SAM3 model was not found. "
             f"model={model_name!r}. Install SAM3 manually and place the weight file in "
-            "an ADetailer model directory or provide an absolute path."
+            "an ADetailer model directory or provide an absolute path. "
+            f"Searched paths: {searched_str}"
         )
 
     # NOTE: keep optional import local so Forge startup is unaffected.

@@ -851,6 +851,7 @@ class AfterDetailerScript(scripts.Script):
                     text_prompt=args.ad_model_classes,
                     model_name=ad_model,
                     model_dirs=[adetailer_dir, *extra_models_dirs.split("|")],
+                    model_path_input=args.ad_sam3_model_path,
                     confidence=args.ad_confidence,
                     target_selection=args.ad_sam3_target_selection,
                     min_mask_area=args.ad_sam3_min_mask_area,

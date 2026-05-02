@@ -92,6 +92,7 @@ git clone https://github.com/IOSakaki/adetailer.git
 2. WebUIルート配下の `models/sam3/` ディレクトリを作成します（存在しない場合）。
 3. ダウンロードした重みファイル（例: `sam3_*.pt` など）を `models/sam3/` に配置します。
 4. ADetailer detectorで `sam3_text` を選択し、`ADetailer detector classes` にテキストプロンプトを入力します。
+   - StabilityMatrix などで自動検出されない場合は、`SAM3 model path` に重みファイルの絶対パス（または重みを含むディレクトリ）を指定してください。
 5. 必要に応じて `SAM3 target selection` / `SAM3 minimum mask area` を設定します。
 
 > 注: SAM3が見つからない場合でも、ADetailer全体の起動を止めない設計を維持します。
