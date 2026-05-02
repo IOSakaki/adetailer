@@ -158,7 +158,7 @@ class AfterDetailerScript(scripts.Script):
                     file=sys.stderr,
                 )
 
-    def update_controlnet_args(self, p, args: ADetailerArgs) -> None:
+    def update_controlnet_args(self, p, args: ADetailerArgs, *, image=None) -> None:
         if self.controlnet_ext is None:
             self.init_controlnet_ext()
 
@@ -174,6 +174,7 @@ class AfterDetailerScript(scripts.Script):
                 weight=args.ad_controlnet_weight,
                 guidance_start=args.ad_controlnet_guidance_start,
                 guidance_end=args.ad_controlnet_guidance_end,
+                image=image,
             )
 
     def is_ad_enabled(self, *args) -> bool:
@@ -306,6 +307,16 @@ class AfterDetailerScript(scripts.Script):
                 prompts[n] = prompts[n].replace(pair.s, pair.r)
         return prompts
 
+    @staticmethod
+    def append_prompt(base: str, tail: str) -> str:
+        if not tail.strip():
+            return base
+        if not base.strip():
+            return tail.strip()
+        if base.rstrip().endswith((",", "\n")):
+            return f"{base} {tail.strip()}"
+        return f"{base}, {tail.strip()}"
+
     def get_prompt(self, p, args: ADetailerArgs) -> tuple[list[str], list[str]]:
         i = get_i(p)
         prompt_sr = p._ad_xyz_prompt_sr if hasattr(p, "_ad_xyz_prompt_sr") else []
@@ -325,7 +336,26 @@ class AfterDetailerScript(scripts.Script):
             replacements=prompt_sr,
         )
 
+        prompt = [self.append_prompt(x, args.ad_prompt_append) for x in prompt]
+        negative_prompt = [
+            self.append_prompt(x, args.ad_negative_prompt_append) for x in negative_prompt
+        ]
+
         return prompt, negative_prompt
+
+    @staticmethod
+    def get_controlnet_crop_image(
+        image: Image.Image, mask: Image.Image, padding: int
+    ) -> Image.Image:
+        bbox = mask.getbbox()
+        if bbox is None:
+            return image
+        x1, y1, x2, y2 = bbox
+        x1 = max(0, x1 - padding)
+        y1 = max(0, y1 - padding)
+        x2 = min(image.width, x2 + padding)
+        y2 = min(image.height, y2 + padding)
+        return image.crop((x1, y1, x2, y2))
 
     def get_seed(self, p) -> tuple[int, int]:
         i = get_i(p)
@@ -557,7 +587,7 @@ class AfterDetailerScript(scripts.Script):
         if args.ad_controlnet_model != "Passthrough" and controlnet_type != "forge":
             i2i.script_args = self.disable_controlnet_units(i2i.script_args)
 
-        if args.ad_controlnet_model not in ["None", "Passthrough"]:
+        if args.ad_controlnet_model not in ["None", "Passthrough"] and not args.ad_controlnet_use_crop_input:
             self.update_controlnet_args(i2i, args)
         elif args.ad_controlnet_model == "None":
             i2i.control_net_enabled = False
@@ -868,6 +898,14 @@ class AfterDetailerScript(scripts.Script):
                 continue
 
             self.fix_p2(p, p2, pp, args, pred, j)
+
+            if args.ad_controlnet_model not in ["None", "Passthrough"] and args.ad_controlnet_use_crop_input:
+                cn_image = self.get_controlnet_crop_image(
+                    p2.init_images[0],
+                    p2.image_mask,
+                    args.ad_inpaint_only_masked_padding,
+                )
+                self.update_controlnet_args(p2, args, image=cn_image)
 
             try:
                 processed = process_images(p2)

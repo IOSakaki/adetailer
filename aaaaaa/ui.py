@@ -241,6 +241,30 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 elem_id=eid("ad_negative_prompt"),
             )
 
+        with gr.Row(elem_id=eid("ad_toprow_prompt_append")):
+            w.ad_prompt_append = gr.Textbox(
+                value="",
+                label="ad_prompt_append" + suffix(n),
+                show_label=False,
+                lines=2,
+                placeholder="Prompt append"
+                + suffix(n)
+                + "\nAppended to the final ADetailer prompt.",
+                elem_id=eid("ad_prompt_append"),
+            )
+
+        with gr.Row(elem_id=eid("ad_toprow_negative_prompt_append")):
+            w.ad_negative_prompt_append = gr.Textbox(
+                value="",
+                label="ad_negative_prompt_append" + suffix(n),
+                show_label=False,
+                lines=2,
+                placeholder="Negative prompt append"
+                + suffix(n)
+                + "\nAppended to the final ADetailer negative prompt.",
+                elem_id=eid("ad_negative_prompt_append"),
+            )
+
     with gr.Group():
         with gr.Accordion(
             "Detection", open=False, elem_id=eid("ad_detection_accordion")
@@ -717,4 +741,12 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
                 visible=True,
                 interactive=controlnet_exists,
                 elem_id=eid("ad_controlnet_guidance_end"),
+            )
+
+            w.ad_controlnet_use_crop_input = gr.Checkbox(
+                label="Use ADetailer crop as ControlNet input" + suffix(n),
+                value=False,
+                visible=True,
+                interactive=controlnet_exists,
+                elem_id=eid("ad_controlnet_use_crop_input"),
             )
