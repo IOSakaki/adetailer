@@ -75,6 +75,24 @@ git clone https://github.com/IOSakaki/adetailer.git
 
 5. Forge / ReForgeを完全に再起動します。
 
+## SAM3モデル重みの扱い方（将来対応向け）
+
+このフォークでは、将来のSAM3連携に備えて**モデル重みの配置方針のみ**を定義します。現時点ではSAM3本体の推論実装や自動ダウンロードは含みません。
+
+- 推奨配置先: `models/sam3/`
+- SAM3重みは、Meta公式またはHugging Faceから**利用者自身で取得**してください。
+- このフォークはSAM3重みを**同梱・再配布しません**。
+- SAM3が未導入でも、通常のADetailer（YOLO / MediaPipe / ControlNet）はそのまま利用できます。
+
+### SAM3重みの手動導入手順
+
+1. 使いたいSAM3重みをMeta公式またはHugging Faceからダウンロードします。
+2. WebUIルート配下の `models/sam3/` ディレクトリを作成します（存在しない場合）。
+3. ダウンロードした重みファイル（例: `sam3_*.pt` など）を `models/sam3/` に配置します。
+4. 将来SAM3アダプタが追加された後は、ADetailerのSAM3選択時にこの配置先が参照されます。
+
+> 注: SAM3が見つからない場合でも、ADetailer全体の起動を止めない設計を維持します。
+
 ## 注意
 
 これは実験版フォークであり、本家ADetailerではありません。
