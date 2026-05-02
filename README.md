@@ -1,38 +1,56 @@
-# ADetailer ReForge向け実験フォーク
+# ADetailer（CN回り改修・プロンプト追記機能実装版）
 
-これは、Bing-su氏による本家ADetailerをもとにした個人用の実験フォークです。
-主な目的は、ReForge環境でADetailerとControlNetを組み合わせて使うときの扱いやすさを改善することです。特に、Anytest系ControlNetモデルをADetailer内から直接選びやすくし、顔や手などの局所修正時にControlNetが全体キャンバスではなくADetailer側の局所修正に合った入力を参照しやすくするための変更を加えています。
+English summary:
+
+This is a personal experimental fork of Bing-su/adetailer for ReForge / Forge users.  
+It adds experimental improvements for using ADetailer with ControlNet, especially Anytest ControlNet models and localized ADetailer inpaint workflows.
+
+This is not the official ADetailer repository.  
+Please do not report issues caused by this fork to the upstream ADetailer repository.  
+Use this fork at your own risk.
+
+Original upstream: https://github.com/Bing-su/adetailer
+
+---
+
+これは、Bing-su氏による本家ADetailerをもとにした、ReForge / Forge向けの個人用実験フォークです。  
+本家ADetailerではありません。
+
+主な目的は、ReForge環境でADetailerとControlNetを組み合わせて使うときの扱いやすさを改善することです。Anytest系ControlNetモデルをADetailer内から直接選びやすくし、顔や手などの局所修正時に、ControlNetがADetailerの局所inpaint処理に合った入力を参照しやすくするための変更を加えています。ADetailerではプロンプト欄を空欄にするとメインのプロンプトをそのまま流用しますが、その末尾に追記できる「Prompt append」欄も追加しています。
 
 ## 本家ADetailerとの違い
 
 このフォークでは、主に次の機能を追加しています。
 
-1. Anytest系ControlNetモデルへの対応  
+### 1. Anytest系ControlNetモデルへの対応
+
 ADetailerのControlNetモデル選択欄に、`anytest`を含むControlNetモデルが表示されるようにしました。  
 これにより、`CN-anytest_v3`などのモデルをADetailer側のControlNet欄から直接選択できます。
 
-2. ADetailer cropを使ったControlNet入力  
-Controlnet欄に`Use ADetailer crop as ControlNet input`のチェックボックスを追加しています。  
-オフにすると、従来通りControlNetへ元キャンバス画像を渡します。顔面のAdetailerをしたい場合は、インペイント時に顔面ではなく全身の画像を参照してしまうのでｍ強強度だと破綻します（顔部分に全身が入れ子状に描かれる）。
-これをオンにすると、Adetailerが切り抜いた範囲をControlnetに渡すので、強強度でインペイントしても破綻が起きにくくなります。
+### 2. ADetailer cropを使ったControlNet入力
 
-4. Prompt append / Negative prompt append  
+ControlNet欄に`Use ADetailer crop as ControlNet input`のチェックボックスを追加しています。
+
+オンにすると、手動でbbox crop画像をControlNetへ渡すのではなく、ADetailer / ReForge側の既存inpaintパイプラインに委ねます。これにより、顔や手などの局所修正時に、ControlNetが全体キャンバスではなく局所inpaint処理に合った入力を参照しやすくなります。
+
+オフにすると、ControlNetへ元キャンバス画像を明示的に渡し、従来の全体参照に近い挙動にします。
+
+### 3. Prompt append / Negative prompt append
+
 ADetailerのprompt欄を空欄にした場合、従来どおり元画像生成時のpromptを継承します。  
 そのうえで、`Prompt append`に書いた内容を最終promptの末尾へ追加できます。
 
 たとえば、ADetailerのprompt欄は空欄のまま、`Prompt append`に次のように書くことで、元のpromptを維持しつつ、顔修正時だけ追加LoRAを適用できます。
 
+```text
 <lora:your_face_lora:0.5>
+```
 
 同様に、表情だけを変えたい場合は次のように指定できます。
 
+```text
 smile, open mouth
-
-※本家リポジトリではありません。  
-このフォークで発生した不具合を、本家ADetailer側へ問い合わせないでください。  
-使用する場合は、実験版として自己責任で利用してください。
-
-Original upstream: https://github.com/Bing-su/adetailer
+```
 
 ## Forge / ReForgeへのインストール方法
 
@@ -41,18 +59,30 @@ Original upstream: https://github.com/Bing-su/adetailer
 1. Forge / ReForgeを完全に終了します。
 2. WebUIの`extensions`フォルダを開きます。
 3. 既に本家ADetailerが入っている場合は、`extensions`フォルダの外へ移動します。
+※`adetailer_bak`のように名前を変えただけでは、拡張機能として読み込まれる場合があります。  
+バックアップしたい場合は、必ず`extensions`フォルダの外へ移動してください。
 4. Forge / ReForgeのExtensions画面から、次のURLを指定してインストールします。
+
+```text
 https://github.com/IOSakaki/adetailer
+```
 
-手動で入れる場合は、extensionsフォルダ内で次を実行します。
+手動で入れる場合は、Forge / ReForgeの`extensions`フォルダ内で次を実行します。
+
+```bash
 git clone https://github.com/IOSakaki/adetailer.git
+```
 
-5.Forge / ReForgeを完全に再起動します。
+5. Forge / ReForgeを完全に再起動します。
 
-＜注意＞
-これは実験版フォークです。本家ADetailerではありません。
-不具合が出た場合は、まずこのフォークを外し、本家版で再現するか確認してください。
-このフォークに起因する問題を本家ADetailerへ報告しないでください。ライセンスは本家ADetailerに従い、AGPL-3.0です。
+## 注意
+
+これは実験版フォークであり、本家ADetailerではありません。
+このフォークで発生した不具合を、本家ADetailer側へ報告しないでください。  
+不具合が出た場合は、まずこのフォークを外し、本家ADetailerで再現するか確認してください。
+ライセンスは本家ADetailerに従い、AGPL-3.0です。
+
+---
 
 
 # ADetailer
