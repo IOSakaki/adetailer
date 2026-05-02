@@ -234,3 +234,41 @@ def test_mask_invert():
     draw.rectangle((3, 3, 5, 5), fill="black")
 
     assert np.array_equal(np.array(inverted[0]), np.array(expect))
+
+from adetailer.common import PredictOutput
+from adetailer.mask import filter_by_ratio, filter_k_largest, sort_bboxes
+
+
+def test_sort_bboxes_keeps_fields_aligned_and_safe_with_partial_lists():
+    pred = PredictOutput(
+        bboxes=[[20, 0, 30, 10], [0, 0, 10, 10]],
+        masks=[Image.new("L", (32, 32), 0)],
+        confidences=[0.2, 0.9],
+        labels=["a", "b"],
+        preview=Image.new("RGB", (32, 32), "black"),
+    )
+
+    out = sort_bboxes(pred, order=1)
+
+    assert out.bboxes == [[0, 0, 10, 10], [20, 0, 30, 10]]
+    assert out.confidences == [0.9, 0.2]
+    assert out.labels == ["b", "a"]
+    assert len(out.masks) == 0
+
+
+def test_filter_ops_do_not_crash_with_optional_mask_entries():
+    pred = PredictOutput(
+        bboxes=[[0, 0, 10, 10], [20, 0, 30, 10]],
+        masks=[None],
+        confidences=[0.1, 0.9],
+        labels=["x", "y"],
+        preview=Image.new("RGB", (100, 100), "black"),
+    )
+
+    out = filter_by_ratio(pred, 0.0, 1.0)
+    out = filter_k_largest(out, 1)
+
+    assert out.bboxes == [[20, 0, 30, 10]]
+    assert out.confidences == [0.9]
+    assert out.labels == ["y"]
+    assert out.masks == []
