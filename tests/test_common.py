@@ -67,3 +67,22 @@ def test_create_bbox_from_mask():
 
     result = create_bbox_from_mask([mask], (256, 256))
     assert result[0] == [38, 38, 166, 166]
+
+from pathlib import Path
+
+from adetailer.common import resolve_sam3_model_path
+
+
+def test_resolve_sam3_model_path_search_dirs(tmp_path: Path):
+    sam3_dir = tmp_path / "models" / "sam3"
+    sam3_dir.mkdir(parents=True)
+    weight = sam3_dir / "sam3_large.pt"
+    weight.write_text("stub")
+
+    resolved = resolve_sam3_model_path("sam3_large.pt", sam3_dir)
+    assert resolved == weight
+
+
+def test_resolve_sam3_model_path_missing_returns_none(tmp_path: Path):
+    resolved = resolve_sam3_model_path("sam3_missing.pt", tmp_path)
+    assert resolved is None

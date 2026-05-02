@@ -147,6 +147,35 @@ def get_models(
     return models
 
 
+def resolve_sam3_model_path(
+    model_name: str,
+    *search_dirs: str | os.PathLike[str],
+) -> Path | None:
+    """Resolve a SAM3 weight path without enforcing availability.
+
+    This helper is intentionally lightweight and does not download files.
+    Future SAM3 adapters can call this when SAM3 is explicitly selected,
+    then show a user-facing message if the returned path is ``None``.
+    """
+
+    model_name = model_name.strip()
+    if not model_name:
+        return None
+
+    candidate = Path(model_name).expanduser()
+    if candidate.is_file():
+        return candidate
+
+    for dir_ in search_dirs:
+        if not dir_:
+            continue
+        path = Path(dir_).expanduser() / model_name
+        if path.is_file():
+            return path
+
+    return None
+
+
 def create_mask_from_bbox(
     bboxes: list[list[float]], shape: tuple[int, int]
 ) -> list[Image.Image]:
