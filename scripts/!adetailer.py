@@ -624,8 +624,11 @@ class AfterDetailerScript(scripts.Script):
         )
         pred = filter_k_by(pred, k=args.ad_mask_k, by=args.ad_mask_filter_method)
         pred = self.sort_bboxes(pred)
+        # Future SAM3 text-prompt adapter should attach per-detection masks to `pred.masks`.
+        # If a mask is missing/invalid, bbox fallback is used automatically.
+        detection_masks = pred.get_masks_for_inpaint(pred.preview.size if pred.preview is not None else p.init_images[0].size)
         masks = mask_preprocess(
-            pred.masks,
+            detection_masks,
             kernel=args.ad_dilate_erode,
             x_offset=args.ad_x_offset,
             y_offset=args.ad_y_offset,

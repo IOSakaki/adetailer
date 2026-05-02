@@ -21,9 +21,37 @@ T = TypeVar("T", int, float)
 @dataclass
 class PredictOutput(Generic[T]):
     bboxes: list[list[T]] = field(default_factory=list)
-    masks: list[Image.Image] = field(default_factory=list)
+    masks: list[Image.Image | None] = field(default_factory=list)
     confidences: list[float] = field(default_factory=list)
+    labels: list[str] = field(default_factory=list)
     preview: Optional[Image.Image] = None
+
+    def get_masks_for_inpaint(self, shape: tuple[int, int]) -> list[Image.Image]:
+        """
+        Return per-detection inpaint masks.
+
+        If a detection-specific mask is unavailable or invalid, fallback to the bbox mask.
+        """
+        bbox_masks = create_mask_from_bbox(self.bboxes, shape)
+        masks: list[Image.Image] = []
+
+        for i, bbox_mask in enumerate(bbox_masks):
+            mask = self.masks[i] if i < len(self.masks) else None
+            if mask is None:
+                masks.append(bbox_mask)
+                continue
+
+            mask = ensure_pil_image(mask, "L")
+            if mask.size != shape:
+                mask = mask.resize(shape)
+
+            if mask.getbbox() is None:
+                masks.append(bbox_mask)
+                continue
+
+            masks.append(mask)
+
+        return masks
 
 
 def hf_download(file: str, repo_id: str = REPO_ID, check_remote: bool = True) -> str:
