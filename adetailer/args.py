@@ -217,6 +217,9 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     def is_mediapipe(self) -> bool:
         return self.ad_model.lower().startswith("mediapipe")
 
+    def is_sam3(self) -> bool:
+        return self.ad_model.lower().startswith("sam3")
+
     def need_skip(self) -> bool:
         return self.ad_model == "None" or self.ad_tab_enable is False
 
