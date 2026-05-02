@@ -745,7 +745,7 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
 
             w.ad_controlnet_use_crop_input = gr.Checkbox(
                 label="Use ADetailer crop as ControlNet input" + suffix(n),
-                value=False,
+                value=True,
                 visible=True,
                 interactive=controlnet_exists,
                 elem_id=eid("ad_controlnet_use_crop_input"),
