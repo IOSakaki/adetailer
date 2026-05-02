@@ -39,13 +39,15 @@ def ultralytics_predict(
         masks = mask_to_pil(pred[0].masks.data, image.size)
 
     confidences = pred[0].boxes.conf.cpu().numpy().tolist()
+    cls_idx = pred[0].boxes.cls.cpu().numpy().astype(int).tolist()
+    labels = [pred[0].names.get(i, str(i)) for i in cls_idx]
 
     preview = pred[0].plot()
     preview = cv2.cvtColor(preview, cv2.COLOR_BGR2RGB)
     preview = Image.fromarray(preview)
 
     return PredictOutput(
-        bboxes=bboxes, masks=masks, confidences=confidences, preview=preview
+        bboxes=bboxes, masks=masks, confidences=confidences, labels=labels, preview=preview
     )
 
 

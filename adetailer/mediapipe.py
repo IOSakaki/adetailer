@@ -71,7 +71,7 @@ def mediapipe_face_detection(
     preview = Image.fromarray(preview_array)
 
     return PredictOutput(
-        bboxes=bboxes, masks=masks, confidences=confidences, preview=preview
+        bboxes=bboxes, masks=masks, confidences=confidences, labels=["face"] * len(bboxes), preview=preview
     )
 
 
@@ -122,7 +122,7 @@ def mediapipe_face_mesh(
         bboxes = create_bbox_from_mask(masks, image.size)
         preview = Image.fromarray(preview)
         return PredictOutput(
-            bboxes=bboxes, masks=masks, confidences=confidences, preview=preview
+            bboxes=bboxes, masks=masks, confidences=confidences, labels=["face"] * len(bboxes), preview=preview
         )
 
 
@@ -170,7 +170,7 @@ def mediapipe_face_mesh_eyes_only(
         bboxes = create_bbox_from_mask(masks, image.size)
         preview = draw_preview(preview, bboxes, masks)
         return PredictOutput(
-            bboxes=bboxes, masks=masks, confidences=confidences, preview=preview
+            bboxes=bboxes, masks=masks, confidences=confidences, labels=["eyes"] * len(bboxes), preview=preview
         )
 
 
