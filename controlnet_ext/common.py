@@ -8,5 +8,6 @@ cn_model_module = {
     "tile": "tile_resample",
     "depth": "depth_midas",
 }
-_names = [*cn_model_module, "union"]
+# Keep existing filters and include Anytest family models.
+_names = [*cn_model_module, "union", "anytest"]
 cn_model_regex = re.compile("|".join(_names), flags=re.IGNORECASE)

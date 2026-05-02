@@ -57,6 +57,7 @@ class ControlNetExt:
         weight: float,
         guidance_start: float,
         guidance_end: float,
+        image=None,
     ):
         if (not self.cn_available) or model == "None":
             return

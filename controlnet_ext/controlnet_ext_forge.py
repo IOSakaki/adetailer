@@ -53,11 +53,13 @@ class ControlNetExt:
         weight: float,
         guidance_start: float,
         guidance_end: float,
+        image=None,
     ):
         if (not self.cn_available) or model == "None":
             return
 
-        image = np.asarray(p.init_images[0])
+        input_image = p.init_images[0] if image is None else image
+        image = np.asarray(input_image)
         mask = np.full_like(image, fill_value=255)
 
         cnet_image = {"image": image, "mask": mask}
