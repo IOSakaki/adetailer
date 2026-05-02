@@ -98,7 +98,7 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_controlnet_weight: confloat(ge=0.0, le=1.0) = 1.0
     ad_controlnet_guidance_start: confloat(ge=0.0, le=1.0) = 0.0
     ad_controlnet_guidance_end: confloat(ge=0.0, le=1.0) = 1.0
-    ad_controlnet_use_crop_input: bool = False
+    ad_controlnet_use_crop_input: bool = True
     is_api: bool = True
 
     @validator("is_api", pre=True)

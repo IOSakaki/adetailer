@@ -587,9 +587,7 @@ class AfterDetailerScript(scripts.Script):
         if args.ad_controlnet_model != "Passthrough" and controlnet_type != "forge":
             i2i.script_args = self.disable_controlnet_units(i2i.script_args)
 
-        if args.ad_controlnet_model not in ["None", "Passthrough"] and not args.ad_controlnet_use_crop_input:
-            self.update_controlnet_args(i2i, args)
-        elif args.ad_controlnet_model == "None":
+        if args.ad_controlnet_model == "None":
             i2i.control_net_enabled = False
 
         return i2i
@@ -899,12 +897,14 @@ class AfterDetailerScript(scripts.Script):
 
             self.fix_p2(p, p2, pp, args, pred, j)
 
-            if args.ad_controlnet_model not in ["None", "Passthrough"] and args.ad_controlnet_use_crop_input:
-                cn_image = self.get_controlnet_crop_image(
-                    p2.init_images[0],
-                    p2.image_mask,
-                    args.ad_inpaint_only_masked_padding,
-                )
+            if args.ad_controlnet_model not in ["None", "Passthrough"]:
+                cn_image = None
+                if args.ad_controlnet_use_crop_input:
+                    cn_image = self.get_controlnet_crop_image(
+                        p2.init_images[0],
+                        p2.image_mask,
+                        args.ad_inpaint_only_masked_padding,
+                    )
                 self.update_controlnet_args(p2, args, image=cn_image)
 
             try:
