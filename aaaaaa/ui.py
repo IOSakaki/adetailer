@@ -92,12 +92,26 @@ def on_generate_click(state: dict, *values: Any):
 
 
 def on_ad_model_update(model: str):
-    if "-world" in model:
-        return gr.update(
-            visible=True,
-            placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
+    if model.lower().startswith("sam3"):
+        return (
+            gr.update(visible=True, placeholder="SAM3 text prompt, ex: girl face"),
+            gr.update(visible=True),
+            gr.update(visible=True),
         )
-    return gr.update(visible=False, placeholder="")
+    if "-world" in model:
+        return (
+            gr.update(
+                visible=True,
+                placeholder="Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
+            ),
+            gr.update(visible=False),
+            gr.update(visible=False),
+        )
+    return (
+        gr.update(visible=False, placeholder=""),
+        gr.update(visible=False),
+        gr.update(visible=False),
+    )
 
 
 def on_cn_model_update(cn_model_name: str):
@@ -206,11 +220,31 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 visible=False,
                 elem_id=eid("ad_model_classes"),
             )
+            w.ad_sam3_target_selection = gr.Dropdown(
+                label="SAM3 target selection" + suffix(n),
+                choices=["all", "largest", "leftmost", "rightmost"],
+                value="all",
+                visible=False,
+                elem_id=eid("ad_sam3_target_selection"),
+            )
+            w.ad_sam3_min_mask_area = gr.Slider(
+                label="SAM3 minimum mask area (pixels)" + suffix(n),
+                minimum=0,
+                maximum=200000,
+                step=1,
+                value=0,
+                visible=False,
+                elem_id=eid("ad_sam3_min_mask_area"),
+            )
 
             w.ad_model.change(
                 on_ad_model_update,
                 inputs=w.ad_model,
-                outputs=w.ad_model_classes,
+                outputs=[
+                    w.ad_model_classes,
+                    w.ad_sam3_target_selection,
+                    w.ad_sam3_min_mask_area,
+                ],
                 queue=False,
             )
 
