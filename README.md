@@ -75,6 +75,25 @@ git clone https://github.com/IOSakaki/adetailer.git
 
 5. Forge / ReForgeを完全に再起動します。
 
+
+## ReForge / Forge dependency safety (important)
+
+To avoid breaking shared dependencies in existing ReForge / Forge / A1111 venvs, this fork now uses a conservative installer behavior:
+
+- In webui-like environments, `install.py` installs only ADetailer-target packages (`ultralytics`, `mediapipe`, `rich`) with `--no-deps` by default.
+- Shared packages such as Pillow / numpy / opencv / protobuf / gradio / diffusers / torch are not intentionally upgraded by ADetailer installer.
+- If you explicitly want normal dependency resolution, set `ADETAILER_INSTALL_DEPS=1` before launch.
+
+For ReForge users, launching with `--skip-install` is recommended so extension installers do not mutate your runtime environment.
+
+If you must repair dependencies manually, always use the Python executable inside the ReForge venv, for example:
+
+```bash
+/path/to/reforge/venv/bin/python -m pip install --force-reinstall "Pillow==10.4.0"
+```
+
+(Windows example: `path\to\reForge\venv\Scripts\python.exe -m pip install --force-reinstall Pillow==10.4.0`)
+
 ## 注意
 
 これは実験版フォークであり、本家ADetailerではありません。
