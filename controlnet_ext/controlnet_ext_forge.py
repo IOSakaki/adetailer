@@ -51,6 +51,10 @@ class ControlNetExt:
 
     @contextmanager
     def disable_batch_dir(self):
+        if not hasattr(ControlNetUiGroup, "GLOBAL_CONTROLNET_BATCH_DIR"):
+            yield
+            return
+
         batch_dir = ControlNetUiGroup.GLOBAL_CONTROLNET_BATCH_DIR
         ControlNetUiGroup.GLOBAL_CONTROLNET_BATCH_DIR = ""
         try:
@@ -98,8 +102,6 @@ class ControlNetExt:
             if unit_mask is not None:
                 unit_image["mask"] = unit_mask
             unit_kwargs["image"] = unit_image
-        elif unit_mask is not None:
-            unit_kwargs["mask_image"] = unit_mask
 
         add_forge_script_to_adetailer_run(
             p,
