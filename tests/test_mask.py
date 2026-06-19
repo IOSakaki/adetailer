@@ -6,6 +6,9 @@ from PIL import Image, ImageDraw
 from adetailer.mask import (
     bbox_area,
     dilate_erode,
+    expand_bbox,
+    expand_mask_bbox,
+    expand_masks_by_bboxes,
     has_intersection,
     is_all_black,
     mask_invert,
@@ -184,6 +187,37 @@ class TestHasIntersection:
 def test_bbox_area():
     bbox = [0.0, 0.0, 10.0, 10.0]
     assert bbox_area(bbox) == 100
+
+
+def test_expand_bbox():
+    assert expand_bbox([4.0, 4.0, 5.0, 5.0], 2, (10, 10)) == [2, 2, 7, 7]
+    assert expand_bbox([1.0, 1.0, 9.0, 9.0], 4, (10, 10)) == [0, 0, 10, 10]
+
+
+def test_expand_mask_bbox():
+    img = Image.new("L", (10, 10), color="black")
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((4, 4, 5, 5), fill="white")
+
+    result = expand_mask_bbox(img, [4.0, 4.0, 5.0, 5.0], 2)
+
+    assert result.getbbox() == (2, 2, 8, 8)
+    assert np.array(result)[4, 4] == 255
+
+
+def test_expand_masks_by_bboxes():
+    img = Image.new("L", (10, 10), color="black")
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((4, 4, 5, 5), fill="white")
+
+    result = expand_masks_by_bboxes(
+        [img],
+        [[4.0, 4.0, 5.0, 5.0]],
+        2,
+    )
+
+    assert len(result) == 1
+    assert result[0].getbbox() == (2, 2, 8, 8)
 
 
 class TestMaskMerge:

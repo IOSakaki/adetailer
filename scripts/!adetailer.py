@@ -5,6 +5,7 @@ import re
 import sys
 import traceback
 from collections.abc import Sequence
+from contextlib import nullcontext
 from copy import copy
 from functools import partial
 from pathlib import Path
@@ -51,6 +52,8 @@ from adetailer.args import (
 )
 from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
 from adetailer.mask import (
+    expand_bbox,
+    expand_masks_by_bboxes,
     filter_by_ratio,
     filter_k_by,
     has_intersection,
@@ -158,7 +161,9 @@ class AfterDetailerScript(scripts.Script):
                     file=sys.stderr,
                 )
 
-    def update_controlnet_args(self, p, args: ADetailerArgs, *, image=None) -> None:
+    def update_controlnet_args(
+        self, p, args: ADetailerArgs, *, image=None, mask=None
+    ) -> None:
         if self.controlnet_ext is None:
             self.init_controlnet_ext()
 
@@ -175,6 +180,7 @@ class AfterDetailerScript(scripts.Script):
                 guidance_start=args.ad_controlnet_guidance_start,
                 guidance_end=args.ad_controlnet_guidance_end,
                 image=image,
+                mask=mask,
             )
 
     def is_ad_enabled(self, *args) -> bool:
@@ -265,13 +271,16 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_ultralytics_device() -> str:
-        if "adetailer" in shared.cmd_opts.use_cpu:
+        use_cpu = getattr(shared.cmd_opts, "use_cpu", ()) or ()
+        if isinstance(use_cpu, str):
+            use_cpu = (use_cpu,)
+        if "all" in use_cpu or "adetailer" in use_cpu:
             return "cpu"
 
         if platform.system() == "Darwin":
             return ""
 
-        vram_args = ["lowvram", "medvram", "medvram_sdxl"]
+        vram_args = ["lowvram", "medvram", "medvram_sdxl", "novram", "cpu"]
         if any(getattr(cmd_opts, vram, False) for vram in vram_args):
             return "cpu"
 
@@ -364,16 +373,24 @@ class AfterDetailerScript(scripts.Script):
 
         return seed, subseed
 
+    @staticmethod
+    def get_canvas_width_height(p) -> tuple[int, int]:
+        if hasattr(p, "_ad_orig"):
+            return p._ad_orig.width, p._ad_orig.height
+        return p.width, p.height
+
     def get_width_height(self, p, args: ADetailerArgs) -> tuple[int, int]:
-        if args.ad_use_inpaint_width_height:
+        if not args.ad_inpaint_only_masked:
+            if args.ad_use_inpaint_width_height:
+                print(
+                    "[-] ADetailer: Use separate width/height is ignored when Inpaint only masked is off to preserve the full canvas size."
+                )
+            width, height = self.get_canvas_width_height(p)
+        elif args.ad_use_inpaint_width_height:
             width = args.ad_inpaint_width
             height = args.ad_inpaint_height
-        elif hasattr(p, "_ad_orig"):
-            width = p._ad_orig.width
-            height = p._ad_orig.height
         else:
-            width = p.width
-            height = p.height
+            width, height = self.get_canvas_width_height(p)
 
         return width, height
 
@@ -431,6 +448,16 @@ class AfterDetailerScript(scripts.Script):
 
     def get_initial_noise_multiplier(self, _p, args: ADetailerArgs) -> float | None:
         return args.ad_noise_multiplier if args.ad_use_noise_multiplier else None
+
+    @staticmethod
+    def get_inpainting_fill(args: ADetailerArgs) -> int:
+        masked_content = {
+            "fill": 0,
+            "original": 1,
+            "latent noise": 2,
+            "latent nothing": 3,
+        }
+        return masked_content.get(args.ad_inpaint_masked_content, 1)
 
     @staticmethod
     def infotext(p) -> str:
@@ -532,7 +559,7 @@ class AfterDetailerScript(scripts.Script):
             denoising_strength=args.ad_denoising_strength,
             mask=None,
             mask_blur=args.ad_mask_blur,
-            inpainting_fill=1,
+            inpainting_fill=self.get_inpainting_fill(args),
             inpaint_full_res=args.ad_inpaint_only_masked,
             inpaint_full_res_padding=args.ad_inpaint_only_masked_padding,
             inpainting_mask_invert=0,
@@ -624,8 +651,19 @@ class AfterDetailerScript(scripts.Script):
         )
         pred = filter_k_by(pred, k=args.ad_mask_k, by=args.ad_mask_filter_method)
         pred = self.sort_bboxes(pred)
+
+        masks = pred.masks
+        if args.ad_mask_bbox_expansion > 0:
+            masks = expand_masks_by_bboxes(
+                masks, pred.bboxes, args.ad_mask_bbox_expansion
+            )
+            pred.bboxes = [
+                expand_bbox(bbox, args.ad_mask_bbox_expansion, pred.preview.size)
+                for bbox in pred.bboxes
+            ]
+
         masks = mask_preprocess(
-            pred.masks,
+            masks,
             kernel=args.ad_dilate_erode,
             x_offset=args.ad_x_offset,
             y_offset=args.ad_y_offset,
@@ -661,6 +699,21 @@ class AfterDetailerScript(scripts.Script):
             print(
                 f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
+
+    @staticmethod
+    def update_runtime_params(extra_params: dict[str, Any], p2, n: int = 0) -> None:
+        tag = suffix(n)
+        extra_params["ADetailer actual inpaint size" + tag] = (
+            f"{p2.width}x{p2.height}"
+        )
+
+        init_images = getattr(p2, "init_images", None)
+        if init_images:
+            init_image = init_images[0]
+            if hasattr(init_image, "size"):
+                extra_params["ADetailer actual canvas size" + tag] = (
+                    f"{init_image.size[0]}x{init_image.size[1]}"
+                )
 
     @staticmethod
     def get_i2i_init_image(p, pp: PPImage):
@@ -815,6 +868,27 @@ class AfterDetailerScript(scripts.Script):
         extra_params = self.extra_params(arg_list)
         p.extra_generation_params.update(extra_params)
 
+    def prepare_controlnet_context(self, p2, args: ADetailerArgs):
+        if args.ad_controlnet_model in ["None", "Passthrough"]:
+            return nullcontext()
+
+        # ON: rely on ADetailer/ReForge's own inpaint crop pipeline.
+        # OFF: pass the full current canvas and the actual ADetailer mask.
+        cn_image = None
+        cn_mask = ensure_pil_image(p2.image_mask, "L")
+        p2._ad_controlnet_disable_batch_dir = True
+
+        if not args.ad_controlnet_use_crop_input:
+            cn_image = ensure_pil_image(p2.init_images[0], "RGB")
+            p2._ad_controlnet_disable_a1111_crop = True
+
+        self.update_controlnet_args(p2, args, image=cn_image, mask=cn_mask)
+        if self.controlnet_ext is not None and hasattr(
+            self.controlnet_ext, "disable_batch_dir"
+        ):
+            return self.controlnet_ext.disable_batch_dir()
+        return nullcontext()
+
     def _postprocess_image_inner(
         self, p, pp: PPImage, args: ADetailerArgs, *, n: int = 0
     ) -> bool:
@@ -882,17 +956,12 @@ class AfterDetailerScript(scripts.Script):
                 continue
 
             self.fix_p2(p, p2, pp, args, pred, j)
-
-            if args.ad_controlnet_model not in ["None", "Passthrough"]:
-                # ON: rely on ADetailer/ReForge's own inpaint crop pipeline.
-                # OFF: explicitly use the full current canvas as ControlNet input.
-                cn_image = None
-                if not args.ad_controlnet_use_crop_input:
-                    cn_image = ensure_pil_image(p2.init_images[0], "RGB")
-                self.update_controlnet_args(p2, args, image=cn_image)
+            self.update_runtime_params(p.extra_generation_params, p2, n=n)
+            controlnet_context = self.prepare_controlnet_context(p2, args)
 
             try:
-                processed = process_images(p2)
+                with controlnet_context:
+                    processed = process_images(p2)
             except NansException as e:
                 msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
                 print(msg, file=sys.stderr)

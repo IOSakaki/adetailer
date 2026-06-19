@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import copy
+from contextlib import contextmanager
 
 import numpy as np
 from lib_controlnet import external_code, global_state
+from lib_controlnet.controlnet_ui.controlnet_ui_group import ControlNetUiGroup
 from lib_controlnet.external_code import ControlNetUnit
 
 from modules import scripts
@@ -28,6 +30,8 @@ def add_forge_script_to_adetailer_run(
 ):
     p.scripts = copy.copy(scripts.scripts_img2img)
     p.scripts.alwayson_scripts = []
+    if hasattr(p.scripts, "callback_map"):
+        p.scripts.callback_map.clear()
     p.script_args_value = []
 
     script = copy.copy(find_script(p, script_title))
@@ -45,6 +49,32 @@ class ControlNetExt:
     def init_controlnet(self):
         self.cn_available = True
 
+    @contextmanager
+    def disable_batch_dir(self):
+        batch_dir = ControlNetUiGroup.GLOBAL_CONTROLNET_BATCH_DIR
+        ControlNetUiGroup.GLOBAL_CONTROLNET_BATCH_DIR = ""
+        try:
+            yield
+        finally:
+            ControlNetUiGroup.GLOBAL_CONTROLNET_BATCH_DIR = batch_dir
+
+    @staticmethod
+    def _to_controlnet_image(image):
+        return np.asarray(image)
+
+    @staticmethod
+    def _to_controlnet_mask(mask):
+        if mask is None:
+            return None
+        if hasattr(mask, "convert"):
+            mask = mask.convert("L")
+        mask = np.asarray(mask)
+        if mask.ndim == 2:
+            mask = np.stack([mask] * 3, axis=2)
+        elif mask.ndim == 3 and mask.shape[2] == 1:
+            mask = np.repeat(mask, 3, axis=2)
+        return mask
+
     def update_scripts_args(  # noqa: PLR0913
         self,
         p,
@@ -54,22 +84,22 @@ class ControlNetExt:
         guidance_start: float,
         guidance_end: float,
         image=None,
+        mask=None,
     ):
         if (not self.cn_available) or model == "None":
             return
 
-        input_image = p.init_images[0] if image is None else image
-        image = np.asarray(input_image)
-        mask = np.full_like(image, fill_value=255)
+        p._ad_controlnet_disable_batch_dir = True
 
-        cnet_image = {"image": image, "mask": mask}
-
-        pres = external_code.pixel_perfect_resolution(
-            image,
-            target_H=p.height,
-            target_W=p.width,
-            resize_mode=external_code.resize_mode_from_value(p.resize_mode),
-        )
+        unit_kwargs = {}
+        unit_mask = self._to_controlnet_mask(mask)
+        if image is not None:
+            unit_image = {"image": self._to_controlnet_image(image)}
+            if unit_mask is not None:
+                unit_image["mask"] = unit_mask
+            unit_kwargs["image"] = unit_image
+        elif unit_mask is not None:
+            unit_kwargs["mask_image"] = unit_mask
 
         add_forge_script_to_adetailer_run(
             p,
@@ -77,18 +107,19 @@ class ControlNetExt:
             [
                 ControlNetUnit(
                     enabled=True,
-                    image=cnet_image,
                     model=model,
                     module=module,
                     weight=weight,
                     guidance_start=guidance_start,
                     guidance_end=guidance_end,
-                    processor_res=pres,
+                    pixel_perfect=True,
+                    **unit_kwargs,
                 )
             ],
         )
 
 
 def get_cn_models() -> list[str]:
+    global_state.update_controlnet_filenames()
     models = global_state.get_all_controlnet_names()
-    return [m for m in models if cn_model_regex.search(m)]
+    return [m for m in models if m != "None" and cn_model_regex.search(m)]

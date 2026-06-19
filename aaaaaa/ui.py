@@ -45,6 +45,7 @@ else:
 
 union = list(chain.from_iterable(cn_module_choices.values()))
 cn_module_choices["union"] = union
+cn_module_choices["anytest"] = ["None"]
 
 
 class Widgets(SimpleNamespace):
@@ -100,10 +101,15 @@ def on_ad_model_update(model: str):
     return gr.update(visible=False, placeholder="")
 
 
+def normalize_cn_name(name: str) -> str:
+    return name.lower().replace("-", "").replace("_", "").replace(" ", "")
+
+
 def on_cn_model_update(cn_model_name: str):
     cn_model_name = cn_model_name.replace("inpaint_depth", "depth")
+    normalized_model_name = normalize_cn_name(cn_model_name)
     for t in cn_module_choices:
-        if t in cn_model_name:
+        if normalize_cn_name(t) in normalized_model_name:
             choices = cn_module_choices[t]
             return gr.update(visible=True, choices=choices, value=choices[0])
     return gr.update(visible=False, choices=["None"], value="None")
@@ -392,6 +398,15 @@ def mask_preprocessing(w: Widgets, n: int, is_img2img: bool):
                     visible=True,
                     elem_id=eid("ad_dilate_erode"),
                 )
+                w.ad_mask_bbox_expansion = gr.Slider(
+                    label="Mask bbox expansion, pixels" + suffix(n),
+                    minimum=0,
+                    maximum=512,
+                    step=4,
+                    value=0,
+                    visible=True,
+                    elem_id=eid("ad_mask_bbox_expansion"),
+                )
 
         with gr.Row():
             w.ad_mask_merge_invert = gr.Radio(
@@ -426,6 +441,16 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 value=0.4,
                 visible=True,
                 elem_id=eid("ad_denoising_strength"),
+            )
+
+        with gr.Row():
+            w.ad_inpaint_masked_content = gr.Dropdown(
+                label="Inpaint masked content" + suffix(n),
+                choices=["fill", "original", "latent noise", "latent nothing"],
+                value="original",
+                visible=True,
+                type="value",
+                elem_id=eid("ad_inpaint_masked_content"),
             )
 
         with gr.Row():

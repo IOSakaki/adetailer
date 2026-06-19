@@ -7,7 +7,7 @@ from typing import Any, TypeVar
 
 import cv2
 import numpy as np
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 
 from adetailer.args import MASK_MERGE_INVERT
 from adetailer.common import PredictOutput, ensure_pil_image
@@ -103,6 +103,44 @@ def bbox_area(bbox: list[T]) -> T:
     return (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
 
 
+def expand_bbox(bbox: list[T], expansion: int, size: tuple[int, int]) -> list[int]:
+    if expansion <= 0:
+        return list(bbox)
+
+    width, height = size
+    x1, y1, x2, y2 = bbox
+    return [
+        max(0, int(np.floor(x1)) - expansion),
+        max(0, int(np.floor(y1)) - expansion),
+        min(width, int(np.ceil(x2)) + expansion),
+        min(height, int(np.ceil(y2)) + expansion),
+    ]
+
+
+def expand_mask_bbox(
+    mask: Image.Image, bbox: list[T], expansion: int
+) -> Image.Image:
+    if expansion <= 0:
+        return mask
+
+    bbox_mask = Image.new("L", mask.size, 0)
+    draw = ImageDraw.Draw(bbox_mask)
+    draw.rectangle(expand_bbox(bbox, expansion, mask.size), fill=255)
+    return ImageChops.lighter(ensure_pil_image(mask, "L"), bbox_mask)
+
+
+def expand_masks_by_bboxes(
+    masks: list[Image.Image], bboxes: list[list[T]], expansion: int
+) -> list[Image.Image]:
+    if expansion <= 0 or not bboxes:
+        return masks
+
+    return [
+        expand_mask_bbox(mask, bboxes[i], expansion) if i < len(bboxes) else mask
+        for i, mask in enumerate(masks)
+    ]
+
+
 def mask_preprocess(
     masks: list[Image.Image],
     kernel: int = 0,
@@ -128,7 +166,7 @@ def mask_preprocess(
     Returns
     -------
         list[Image.Image]
-            A list of processed masks
+        A list of processed masks
     """
     if not masks:
         return []

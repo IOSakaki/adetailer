@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+from contextlib import nullcontext
 from functools import lru_cache
 from pathlib import Path
 
@@ -49,6 +50,10 @@ class ControlNetExt:
         models = self.external_cn.get_models()
         self.cn_models.extend(m for m in models if cn_model_regex.search(m))
 
+    @staticmethod
+    def disable_batch_dir():
+        return nullcontext()
+
     def update_scripts_args(  # noqa: PLR0913
         self,
         p,
@@ -58,6 +63,7 @@ class ControlNetExt:
         guidance_start: float,
         guidance_end: float,
         image=None,
+        mask=None,
     ):
         if (not self.cn_available) or model == "None":
             return

@@ -67,11 +67,15 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
     ad_mask_min_ratio: confloat(ge=0.0, le=1.0) = 0.0
     ad_mask_max_ratio: confloat(ge=0.0, le=1.0) = 1.0
     ad_dilate_erode: int = 4
+    ad_mask_bbox_expansion: NonNegativeInt = 0
     ad_x_offset: int = 0
     ad_y_offset: int = 0
     ad_mask_merge_invert: Literal["None", "Merge", "Merge and Invert"] = "None"
     ad_mask_blur: NonNegativeInt = 4
     ad_denoising_strength: confloat(ge=0.0, le=1.0) = 0.4
+    ad_inpaint_masked_content: Literal[
+        "fill", "original", "latent noise", "latent nothing"
+    ] = "original"
     ad_inpaint_only_masked: bool = True
     ad_inpaint_only_masked_padding: NonNegativeInt = 32
     ad_use_inpaint_width_height: bool = False
@@ -147,6 +151,8 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         ppop("ADetailer x offset", cond=0)
         ppop("ADetailer y offset", cond=0)
         ppop("ADetailer mask merge invert", cond="None")
+        ppop("ADetailer mask bbox expansion", cond=0)
+        ppop("ADetailer inpaint masked content", cond="original")
         ppop("ADetailer inpaint only masked", ["ADetailer inpaint padding"])
         ppop(
             "ADetailer use inpaint width height",
@@ -237,9 +243,11 @@ _all_args = [
     ("ad_x_offset", "ADetailer x offset"),
     ("ad_y_offset", "ADetailer y offset"),
     ("ad_dilate_erode", "ADetailer dilate erode"),
+    ("ad_mask_bbox_expansion", "ADetailer mask bbox expansion"),
     ("ad_mask_merge_invert", "ADetailer mask merge invert"),
     ("ad_mask_blur", "ADetailer mask blur"),
     ("ad_denoising_strength", "ADetailer denoising strength"),
+    ("ad_inpaint_masked_content", "ADetailer inpaint masked content"),
     ("ad_inpaint_only_masked", "ADetailer inpaint only masked"),
     ("ad_inpaint_only_masked_padding", "ADetailer inpaint padding"),
     ("ad_use_inpaint_width_height", "ADetailer use inpaint width height"),

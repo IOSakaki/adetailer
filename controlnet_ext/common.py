@@ -9,5 +9,5 @@ cn_model_module = {
     "depth": "depth_midas",
 }
 # Keep existing filters and include Anytest family models.
-_names = [*cn_model_module, "union", "anytest"]
-cn_model_regex = re.compile("|".join(_names), flags=re.IGNORECASE)
+_patterns = [*map(re.escape, cn_model_module), "union", r"any[-_]?test"]
+cn_model_regex = re.compile("|".join(_patterns), flags=re.IGNORECASE)
