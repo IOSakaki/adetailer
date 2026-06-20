@@ -1,0 +1,20 @@
+#script_txt2img_adetailer_custom_ad_main_accordion .gradio-row,
+#script_img2img_adetailer_custom_ad_main_accordion .gradio-row {
+    column-gap: 1rem !important;
+    row-gap: 0.65rem !important;
+}
+
+#script_txt2img_adetailer_custom_ad_main_accordion .gradio-column,
+#script_img2img_adetailer_custom_ad_main_accordion .gradio-column {
+    min-width: 0;
+    row-gap: 0.5rem !important;
+}
+
+#script_txt2img_adetailer_custom_ad_main_accordion .info,
+#script_txt2img_adetailer_custom_ad_main_accordion .gradio-info,
+#script_img2img_adetailer_custom_ad_main_accordion .info,
+#script_img2img_adetailer_custom_ad_main_accordion .gradio-info {
+    line-height: 1.35;
+    margin-top: 0.15rem;
+    margin-bottom: 0.35rem;
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-06-20
+
+- v1.0.0-custom
+- Renamed the extension surface to ADetailer Custom for reForge / Forge Neo.
+- Added Forge ControlNet / LLLite inpaint compatibility fixes, including Anytest / Anima / NoobAI model matching.
+- Added ADetailer crop/full-canvas ControlNet input selection.
+- Added ADetailer mask passing for Forge ControlNet models that require masks.
+- Added prompt append fields, mask bbox expansion, Japanese localization, and safer first-tab-only default enable behavior.
+
 ## 2026-02-05
 
 - v26.2.0

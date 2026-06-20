@@ -1,6 +1,6 @@
 [project]
 name = "adetailer-custom"
-description = "A custom object detection and auto-mask extension for stable diffusion webui."
+description = "ADetailer Custom for reForge and Forge Neo."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "AGPL-3.0" }
@@ -10,6 +10,8 @@ keywords = [
   "adetailer-custom",
   "stable-diffusion",
   "stable-diffusion-webui",
+  "reforge",
+  "forge-neo",
   "ultralytics",
 ]
 classifiers = [

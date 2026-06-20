@@ -12,7 +12,7 @@ import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
 
 
 def _log(msg: str):
-    print(f"[ADetailer install] {msg}")  # noqa: T201
+    print(f"[ADetailer Custom install] {msg}")  # noqa: T201
 
 
 def is_installed(
@@ -55,7 +55,7 @@ def _pillow_health_check(stage: str):
         from PIL import Image  # noqa: F401
     except Exception as e:
         _log(f"Pillow import check ({stage}) failed: {e}")
-        _log("If you are using ReForge/Forge, repair in that venv with:")
+        _log("If you are using reForge/Forge Neo, repair in that venv with:")
         _log(f'  "{sys.executable}" -m pip install --force-reinstall "Pillow==10.4.0"')
         msg = "Pillow import failed. See guidance above."
         raise RuntimeError(msg) from e
@@ -68,7 +68,7 @@ def _pillow_health_check(stage: str):
 
     _log(f"Pillow version ({stage}): {pillow_ver}")
     if parse(pillow_ver) >= parse("11"):
-        _log("WARNING: Pillow>=11 detected. ReForge/Forge stacks often require Pillow<11.")
+        _log("WARNING: Pillow>=11 detected. reForge/Forge Neo stacks often require Pillow<11.")
         _log('Recommended range for webui compatibility: "Pillow>=10.2.0,<11"')
 
 
@@ -96,7 +96,7 @@ def install():
     no_deps = is_webui_env and not allow_full_deps
 
     if no_deps:
-        _log("Detected ReForge/Forge/A1111-like environment; using conservative '--no-deps' install mode.")
+        _log("Detected reForge/Forge Neo/webui-like environment; using conservative '--no-deps' install mode.")
         _log("Set ADETAILER_INSTALL_DEPS=1 to allow dependency resolution (may alter shared packages).")
 
     _pillow_health_check("before pip")

@@ -1,224 +1,239 @@
-# ADetailer（CN回り改修・プロンプト追記機能実装版）
+# ADetailer Custom
 
-English summary:
+ADetailer Custom is a reForge / Forge Neo oriented fork of
+[Bing-su/adetailer](https://github.com/Bing-su/adetailer).
 
-This is a personal experimental fork of Bing-su/adetailer for ReForge / Forge users.  
-It adds experimental improvements for using ADetailer with ControlNet, especially Anytest ControlNet models and localized ADetailer inpaint workflows.
+It keeps the basic ADetailer workflow, then adds local fixes and controls for
+using ADetailer together with Forge-style ControlNet / LLLite inpaint models.
 
-This is not the official ADetailer repository.  
-Please do not report issues caused by this fork to the upstream ADetailer repository.  
-Use this fork at your own risk.
+This is not the official ADetailer repository. Please do not report issues
+caused by this fork to upstream ADetailer.
 
-Original upstream: https://github.com/Bing-su/adetailer
+## Target WebUIs
 
----
+- reForge
+- Forge Neo
 
-これは、Bing-su氏による本家ADetailerをもとにした、ReForge / Forge向けの個人用実験フォークです。  
-本家ADetailerではありません。
+Other WebUIs may load the extension, but they are not the primary support
+target for this fork.
 
-主な目的は、ReForge環境でADetailerとControlNetを組み合わせて使うときの扱いやすさを改善することです。Anytest系ControlNetモデルをADetailer内から直接選びやすくし、顔や手などの局所修正時に、ControlNetがADetailerの局所inpaint処理に合った入力を参照しやすくするための変更を加えています。ADetailerではプロンプト欄を空欄にするとメインのプロンプトをそのまま流用しますが、その末尾に追記できる「Prompt append」欄も追加しています。
+## Main Differences From Upstream ADetailer
 
-## 本家ADetailerとの違い
+- The extension is shown as `ADetailer Custom` in the WebUI.
+- Python package names and UI element IDs are separated from upstream ADetailer
+  to reduce conflicts when both are installed.
+- The displayed ADetailer parameter names in generated image metadata are kept
+  as `ADetailer ...` for readability.
+- The extension version is reset to `1.0.0` for this custom fork.
+- Forge ControlNet model matching includes Anytest / Anima / NoobAI-style
+  inpaint model names.
+- ADetailer can pass either the ADetailer crop or the full current canvas to
+  ControlNet.
+- ADetailer can pass an ADetailer-generated mask to Forge ControlNet models
+  that require a mask tensor.
+- `Prompt append` and `Negative prompt append` can add text to the inherited
+  main prompts.
+- `Mask bbox expansion` can expand the detected bounding box before masking and
+  cropping.
+- Japanese localization is included for the ADetailer Custom UI.
 
-このフォークでは、主に次の機能を追加しています。
+## Installation
 
-### 1. Anytest系ControlNetモデルへの対応
+Manual installation is recommended because the repository name is `adetailer`,
+but the intended extension folder name is `ADetailer Custom`.
 
-ADetailerのControlNetモデル選択欄に、`anytest`を含むControlNetモデルが表示されるようにしました。  
-これにより、`CN-anytest_v3`などのモデルをADetailer側のControlNet欄から直接選択できます。
+1. Stop reForge / Forge Neo completely.
+2. Open the target WebUI `extensions` folder.
+3. Clone this repository into a folder named `ADetailer Custom`.
 
-### 2. ADetailer cropを使ったControlNet入力
+Windows PowerShell example:
 
-ControlNet欄に`Use ADetailer crop as ControlNet input`のチェックボックスを追加しています。
+```powershell
+cd "G:\Data\Packages\Forge Neo\extensions"
+git clone https://github.com/IOSakaki/adetailer.git "ADetailer Custom"
+```
 
-オンにすると、手動でbbox crop画像をControlNetへ渡すのではなく、ADetailer / ReForge側の既存inpaintパイプラインに委ねます。これにより、顔や手などの局所修正時に、ControlNetが全体キャンバスではなく局所inpaint処理に合った入力を参照しやすくなります。
+reForge example:
 
-オフにすると、ControlNetへ元キャンバス画像を明示的に渡し、従来の全体参照に近い挙動にします。
+```powershell
+cd "G:\Data\Packages\reForge\extensions"
+git clone https://github.com/IOSakaki/adetailer.git "ADetailer Custom"
+```
 
-### 3. Prompt append / Negative prompt append
+4. Start reForge / Forge Neo again.
 
-ADetailerのprompt欄を空欄にした場合、従来どおり元画像生成時のpromptを継承します。  
-そのうえで、`Prompt append`に書いた内容を最終promptの末尾へ追加できます。
+If you install from the WebUI Extensions tab, the folder may be named
+`adetailer` because GitHub repository names are used by default. Stop the WebUI
+and rename that folder to `ADetailer Custom` if you want the folder name to
+match this fork.
 
-たとえば、ADetailerのprompt欄は空欄のまま、`Prompt append`に次のように書くことで、元のpromptを維持しつつ、顔修正時だけ追加LoRAを適用できます。
+## Updating
+
+Stop the WebUI, then run:
+
+```powershell
+git -C "path\to\extensions\ADetailer Custom" pull
+```
+
+Restart the WebUI after updating.
+
+## Using With Upstream ADetailer
+
+This fork is designed to avoid Python import and UI ID collisions with upstream
+ADetailer. You can keep upstream ADetailer installed for comparison.
+
+However, do not enable both ADetailer and ADetailer Custom for the same
+generation unless you intentionally want both passes to run. If both extensions
+are enabled, both can process the image and the generated image metadata can be
+harder to read because this fork intentionally keeps the common `ADetailer ...`
+parameter names.
+
+For normal use, enable only `ADetailer Custom`.
+
+## Dependency Safety
+
+WebUI environments share many Python packages, so this installer is conservative.
+
+- In reForge / Forge Neo / webui-like environments, `install.py` installs only
+  ADetailer-target packages (`ultralytics`, `mediapipe`, `rich`) with
+  `--no-deps` by default.
+- Shared packages such as Pillow, numpy, opencv, protobuf, gradio, diffusers,
+  and torch are not intentionally upgraded by this extension installer.
+- To allow normal dependency resolution explicitly, set
+  `ADETAILER_INSTALL_DEPS=1` before launch.
+
+For reForge, launching with `--skip-install` is often the safest choice when
+your runtime environment is already working.
+
+If a dependency repair is needed, use the Python executable inside the target
+WebUI venv.
+
+Windows example:
+
+```powershell
+"path\to\reForge\venv\Scripts\python.exe" -m pip install --force-reinstall "Pillow==10.4.0"
+```
+
+## Basic Workflow
+
+1. Enable `ADetailer Custom`.
+2. Use the `1st` tab first. Only the first tab is enabled by default.
+3. Choose a detector model, such as `face_yolov8n.pt`, `hand_yolov8n.pt`, or a
+   segmentation model.
+4. Leave the ADetailer prompt blank to inherit the main prompt, or write a local
+   prompt for the detected region.
+5. Use `Prompt append` / `Negative prompt append` when you want to keep the main
+   prompt and only add local instructions.
+6. Open `Inpainting` and adjust the inpaint settings.
+7. If needed, choose an ADetailer ControlNet model.
+
+## Important Settings
+
+### Inpaint masked content
+
+This controls what is placed under the mask before generation starts.
+
+- `Original image`: keep the original pixels as the starting point.
+- `Fill`: fill the masked area with surrounding colors.
+- `Latent noise`: start from latent noise.
+- `Latent nothing`: treat the masked area as empty latent space.
+
+For strong redraws from scratch, use `Latent nothing` with high denoising.
+
+### Inpaint only masked
+
+On: ADetailer crops around the detected mask, generates inside that crop, then
+pastes the result back.
+
+Off: ADetailer processes the full current canvas. This is often better for
+Forge LLLite / Anima-style inpaint models when they need to read the whole
+image context.
+
+### Mask erosion / dilation
+
+This expands or shrinks the mask shape itself. Use it for small boundary
+adjustments.
+
+### Mask bbox expansion
+
+This expands the detected bounding box before the mask and crop are prepared.
+It gives ADetailer more room around the detected object.
+
+Use this when the detected region is too tight, for example when redrawing a
+hand pose that needs room for extended fingers.
+
+### Use separate width/height
+
+This sets a custom inpaint canvas size for the ADetailer pass. It does not mean
+"detect a region of this size"; it changes the canvas size used for the local
+ADetailer inpaint operation.
+
+### Use ADetailer crop as ControlNet input
+
+On: ControlNet receives the ADetailer crop.
+
+Off: ControlNet receives the full current canvas together with the ADetailer
+mask when possible.
+
+For local face redraws, On is usually a reasonable starting point. For
+Anima / LLLite hand or pose changes that need whole-image context, Off is often
+the better starting point.
+
+## ControlNet Notes
+
+For Forge ControlNet / LLLite inpaint models:
+
+- Use `None` as the preprocessor unless the model specifically requires a
+  preprocessor.
+- Anima LLLite inpaint models usually work best with preprocessor `None`.
+- NoobAI-style inpaint models should use the matching inpaint preprocessor when
+  it is available in the list.
+- If a model looks like it is copying the old face or hand too strongly, check
+  `Inpaint masked content`, denoising strength, and whether ControlNet is using
+  the crop or the full canvas.
+
+## Example Recipes
+
+### Redraw a face with SDXL / NoobAI inpainting
+
+- Detector: face or anime-face segmentation model
+- Inpaint masked content: `Latent nothing`
+- Denoising strength: high, often `1.0`
+- Inpaint only masked: On for local face work
+- ControlNet model: NoobAI inpainting model
+- ControlNet preprocessor: matching NoobAI inpaint preprocessor if available
+- Use ADetailer crop as ControlNet input: On
+
+Use a segmentation detector when you want the mask to follow the face shape
+instead of a rectangle.
+
+### Redraw hands with Anima LLLite inpainting
+
+- Detector: hand detector
+- Prompt: describe the intended gesture clearly, for example
+  `She's waving at me` or `peace sign`
+- Inpaint masked content: `Latent nothing`
+- Denoising strength: high
+- Mask bbox expansion: increase when the hand detection is too tight
+- Inpaint only masked: Off is often better when the model needs the full image
+  context
+- ControlNet model: Anima LLLite inpaint model
+- ControlNet preprocessor: `None`
+- Use ADetailer crop as ControlNet input: Off as a starting point
+
+## Custom Models
+
+Put Ultralytics YOLO detector models in:
 
 ```text
-<lora:your_face_lora:0.5>
+models/adetailer
 ```
 
-同様に、表情だけを変えたい場合は次のように指定できます。
-
-```text
-smile, open mouth
-```
-
-## Forge / ReForgeへのインストール方法
-
-このフォークは、本家ADetailerと同時に入れず、置き換え用として使ってください。
-
-1. Forge / ReForgeを完全に終了します。
-2. WebUIの`extensions`フォルダを開きます。
-3. 既に本家ADetailerが入っている場合は、`extensions`フォルダの外へ移動します。
-※`adetailer_bak`のように名前を変えただけでは、拡張機能として読み込まれる場合があります。  
-バックアップしたい場合は、必ず`extensions`フォルダの外へ移動してください。
-4. Forge / ReForgeのExtensions画面から、次のURLを指定してインストールします。
-
-```text
-https://github.com/IOSakaki/adetailer
-```
-
-手動で入れる場合は、Forge / ReForgeの`extensions`フォルダ内で次を実行します。
-
-```bash
-git clone https://github.com/IOSakaki/adetailer.git
-```
-
-5. Forge / ReForgeを完全に再起動します。
-
-
-## ReForge / Forge dependency safety (important)
-
-To avoid breaking shared dependencies in existing ReForge / Forge / A1111 venvs, this fork now uses a conservative installer behavior:
-
-- In webui-like environments, `install.py` installs only ADetailer-target packages (`ultralytics`, `mediapipe`, `rich`) with `--no-deps` by default.
-- Shared packages such as Pillow / numpy / opencv / protobuf / gradio / diffusers / torch are not intentionally upgraded by ADetailer installer.
-- If you explicitly want normal dependency resolution, set `ADETAILER_INSTALL_DEPS=1` before launch.
-
-For ReForge users, launching with `--skip-install` is recommended so extension installers do not mutate your runtime environment.
-
-If you must repair dependencies manually, always use the Python executable inside the ReForge venv, for example:
-
-```bash
-/path/to/reforge/venv/bin/python -m pip install --force-reinstall "Pillow==10.4.0"
-```
-
-(Windows example: `path\to\reForge\venv\Scripts\python.exe -m pip install --force-reinstall Pillow==10.4.0`)
-
-## 注意
-
-これは実験版フォークであり、本家ADetailerではありません。
-このフォークで発生した不具合を、本家ADetailer側へ報告しないでください。  
-不具合が出た場合は、まずこのフォークを外し、本家ADetailerで再現するか確認してください。
-ライセンスは本家ADetailerに従い、AGPL-3.0です。
-
----
-
-
-# ADetailer
-
-ADetailer is an extension for the stable diffusion webui that does automatic masking and inpainting. It is similar to the Detection Detailer.
-
-## Install
-
-You can install it directly from the Extensions tab.
-
-![image](https://i.imgur.com/qaXtoI6.png)
-
-Or
-
-(from Mikubill/sd-webui-controlnet)
-
-1. Open "Extensions" tab.
-2. Open "Install from URL" tab in the tab.
-3. Enter `https://github.com/Bing-su/adetailer.git` to "URL for extension's git repository".
-4. Press "Install" button.
-5. Wait 5 seconds, and you will see the message "Installed into stable-diffusion-webui\extensions\adetailer. Use Installed tab to restart".
-6. Go to "Installed" tab, click "Check for updates", and then click "Apply and restart UI". (The next time you can also use this method to update extensions.)
-7. Completely restart A1111 webui including your terminal. (If you do not know what is a "terminal", you can reboot your computer: turn your computer off and turn it on again.)
-
-## Options
-
-| Model, Prompts                    |                                                                                    |                                                                                                                                                        |
-| --------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ADetailer model                   | Determine what to detect.                                                          | `None` = disable                                                                                                                                       |
-| ADetailer model classes           | Comma separated class names to detect. only available when using YOLO World models | If blank, use default values.<br/>default = [COCO 80 classes](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco.yaml) |
-| ADetailer prompt, negative prompt | Prompts and negative prompts to apply                                              | If left blank, it will use the same as the input.                                                                                                      |
-| Skip img2img                      | Skip img2img. In practice, this works by changing the step count of img2img to 1.  | img2img only                                                                                                                                           |
-
-| Detection                            |                                                                                              |              |
-| ------------------------------------ | -------------------------------------------------------------------------------------------- | ------------ |
-| Detection model confidence threshold | Only objects with a detection model confidence above this threshold are used for inpainting. |              |
-| Mask min/max ratio                   | Only use masks whose area is between those ratios for the area of the entire image.          |              |
-| Mask only the top k largest          | Only use the k objects with the largest area of the bbox.                                    | 0 to disable |
-
-If you want to exclude objects in the background, try setting the min ratio to around `0.01`.
-
-| Mask Preprocessing              |                                                                                                                                     |                                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Mask x, y offset                | Moves the mask horizontally and vertically by                                                                                       |                                                                                         |
-| Mask erosion (-) / dilation (+) | Enlarge or reduce the detected mask.                                                                                                | [opencv example](https://docs.opencv.org/4.7.0/db/df6/tutorial_erosion_dilatation.html) |
-| Mask merge mode                 | `None`: Inpaint each mask<br/>`Merge`: Merge all masks and inpaint<br/>`Merge and Invert`: Merge all masks and Invert, then inpaint |                                                                                         |
-
-Applied in this order: x, y offset → erosion/dilation → merge/invert.
-
-#### Inpainting
-
-Each option corresponds to a corresponding option on the inpaint tab. Therefore, please refer to the inpaint tab for usage details on how to use each option.
-
-## ControlNet Inpainting
-
-You can use the ControlNet extension if you have ControlNet installed and ControlNet models.
-
-Support `inpaint, scribble, lineart, openpose, tile, depth` controlnet models. Once you choose a model, the preprocessor is set automatically. It works separately from the model set by the Controlnet extension.
-
-If you select `Passthrough`, the controlnet settings you set outside of ADetailer will be used.
-
-## Advanced Options
-
-API request example: [wiki/REST-API](https://github.com/Bing-su/adetailer/wiki/REST-API)
-
-`[SEP], [SKIP], [PROMPT]` tokens: [wiki/Advanced](https://github.com/Bing-su/adetailer/wiki/Advanced)
-
-## Media
-
-- 🎥 [どこよりも詳しい After Detailer (adetailer)の使い方 ① 【Stable Diffusion】](https://youtu.be/sF3POwPUWCE)
-- 🎥 [どこよりも詳しい After Detailer (adetailer)の使い方 ② 【Stable Diffusion】](https://youtu.be/urNISRdbIEg)
-
-- 📜 [ADetailer Installation and 5 Usage Methods](https://kindanai.com/en/manual-adetailer/)
-
-## Model
-
-| Model                 | Target                | mAP 50                        | mAP 50-95                     |
-| --------------------- | --------------------- | ----------------------------- | ----------------------------- |
-| face_yolov8n.pt       | 2D / realistic face   | 0.660                         | 0.366                         |
-| face_yolov8s.pt       | 2D / realistic face   | 0.713                         | 0.404                         |
-| hand_yolov8n.pt       | 2D / realistic hand   | 0.767                         | 0.505                         |
-| person_yolov8n-seg.pt | 2D / realistic person | 0.782 (bbox)<br/>0.761 (mask) | 0.555 (bbox)<br/>0.460 (mask) |
-| person_yolov8s-seg.pt | 2D / realistic person | 0.824 (bbox)<br/>0.809 (mask) | 0.605 (bbox)<br/>0.508 (mask) |
-| mediapipe_face_full   | realistic face        | -                             | -                             |
-| mediapipe_face_short  | realistic face        | -                             | -                             |
-| mediapipe_face_mesh   | realistic face        | -                             | -                             |
-
-The YOLO models can be found on huggingface [Bingsu/adetailer](https://huggingface.co/Bingsu/adetailer).
-
-For a detailed description of the YOLO8 model, see: https://docs.ultralytics.com/models/yolov8/#overview
-
-YOLO World model: https://docs.ultralytics.com/models/yolo-world/
-
-### Additional Model
-
-Put your [ultralytics](https://github.com/ultralytics/ultralytics) yolo model in `models/adetailer`. The model name should end with `.pt`.
-
-It must be a bbox detection or segment model and use all label.
-
-## How it works
-
-ADetailer works in three simple steps.
-
-1. Create an image.
-2. Detect object with a detection model and create a mask image.
-3. Inpaint using the image from 1 and the mask from 2.
-
-## Development
-
-ADetailer is developed and tested using the stable-diffusion 1.5 model, for the latest version of [AUTOMATIC1111/stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) repository only.
+The model name should end with `.pt`.
 
 ## License
 
-ADetailer is a derivative work that uses two AGPL-licensed works (stable-diffusion-webui, ultralytics) and is therefore distributed under the AGPL license.
+ADetailer Custom is a derivative of ADetailer and is distributed under the
+AGPL-3.0 license, following the upstream project.
 
-## See Also
-
-- https://github.com/ototadana/sd-face-editor
-- https://github.com/continue-revolution/sd-webui-segment-anything
-- https://github.com/portu-sim/sd-webui-bmab
+Original upstream: https://github.com/Bing-su/adetailer
