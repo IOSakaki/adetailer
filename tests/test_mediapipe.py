@@ -1,7 +1,7 @@
 import pytest
 from PIL import Image
 
-from adetailer.mediapipe import mediapipe_predict
+from adetailer_custom.mediapipe import mediapipe_predict
 
 
 @pytest.mark.parametrize(

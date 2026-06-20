@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from PIL import Image, ImageDraw
 
-from adetailer.mask import (
+from adetailer_custom.mask import (
     bbox_area,
     dilate_erode,
     expand_bbox,

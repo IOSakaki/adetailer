@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 
-from adetailer import PredictOutput
-from adetailer.common import create_bbox_from_mask, create_mask_from_bbox
+from adetailer_custom import PredictOutput
+from adetailer_custom.common import create_bbox_from_mask, create_mask_from_bbox
 
 
 def mediapipe_predict(
@@ -25,7 +25,7 @@ def mediapipe_predict(
             return func(image, confidence)
         except Exception:
             return PredictOutput()
-    msg = f"[-] ADetailer: Invalid mediapipe model type: {model_type}, Available: {list(mapping.keys())!r}"
+    msg = f"[-] ADetailer Custom: Invalid mediapipe model type: {model_type}, Available: {list(mapping.keys())!r}"
     raise RuntimeError(msg)
 
 

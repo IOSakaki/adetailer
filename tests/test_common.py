@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image, ImageDraw
 
-from adetailer.common import create_bbox_from_mask, create_mask_from_bbox
+from adetailer_custom.common import create_bbox_from_mask, create_mask_from_bbox
 
 
 def test_create_mask_from_bbox():

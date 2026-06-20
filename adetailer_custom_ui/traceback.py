@@ -13,8 +13,8 @@ from rich.table import Table
 from rich.traceback import Traceback
 from typing_extensions import ParamSpec
 
-from adetailer.__version__ import __version__
-from adetailer.args import ADetailerArgs
+from adetailer_custom.__version__ import __version__
+from adetailer_custom.args import ADetailerArgs
 
 
 def processing(*args: Any) -> dict[str, Any]:
@@ -157,7 +157,7 @@ def rich_traceback(func: Callable[P, T]) -> Callable[P, T]:
                 for title, data in [
                     ("System info", sys_info()),
                     ("Inputs", processing(*args)),
-                    ("ADetailer", ad_args(*args)),
+                    ("ADetailer Custom", ad_args(*args)),
                 ]
                 if data
             ]

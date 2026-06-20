@@ -1,12 +1,13 @@
 [project]
-name = "adetailer"
-description = "An object detection and auto-mask extension for stable diffusion webui."
+name = "adetailer-custom"
+description = "A custom object detection and auto-mask extension for stable diffusion webui."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "AGPL-3.0" }
 authors = [{ name = "dowon", email = "ks2515@naver.com" }]
 keywords = [
   "adetailer",
+  "adetailer-custom",
   "stable-diffusion",
   "stable-diffusion-webui",
   "ultralytics",
@@ -25,7 +26,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-repository = "https://github.com/Bing-su/adetailer"
+repository = "https://github.com/IOSakaki/adetailer"
 
 [project.optional-dependencies]
 dev = ["devtools"]
@@ -36,11 +37,11 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
-path = "adetailer/__version__.py"
+path = "adetailer_custom/__version__.py"
 
 [tool.isort]
 profile = "black"
-known_first_party = ["launch", "modules"]
+known_first_party = ["adetailer_custom", "adetailer_custom_controlnet_ext", "adetailer_custom_ui", "launch", "modules"]
 
 [tool.ruff]
 target-version = "py39"
@@ -78,7 +79,7 @@ ignore = ["B905", "E501", "PLC0415", "PLR2004", "PLW0603"]
 unfixable = ["F401"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["launch", "modules"]
+known-first-party = ["adetailer_custom", "adetailer_custom_controlnet_ext", "adetailer_custom_ui", "launch", "modules"]
 
 [tool.ruff.lint.pyupgrade]
 keep-runtime-typing = true

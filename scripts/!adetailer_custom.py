@@ -16,32 +16,14 @@ from PIL import Image, ImageChops
 from rich import print  # noqa: A004  Shadowing built-in 'print'
 
 import modules
-from aaaaaa.conditional import create_binary_mask, schedulers
-from aaaaaa.helper import (
-    PPImage,
-    copy_extra_params,
-    disable_safe_unpickle,
-    pause_total_tqdm,
-    preserve_prompts,
-)
-from aaaaaa.p_method import (
-    get_i,
-    is_img2img_inpaint,
-    is_inpaint_only_masked,
-    is_skip_img2img,
-    need_call_postprocess,
-    need_call_process,
-)
-from aaaaaa.traceback import rich_traceback
-from aaaaaa.ui import WebuiInfo, adui, ordinal, suffix
-from adetailer import (
+from adetailer_custom import (
     ADETAILER,
     __version__,
     get_models,
     mediapipe_predict,
     ultralytics_predict,
 )
-from adetailer.args import (
+from adetailer_custom.args import (
     BBOX_SORTBY,
     BUILTIN_SCRIPT,
     INPAINT_BBOX_MATCH_MODES,
@@ -50,8 +32,8 @@ from adetailer.args import (
     InpaintBBoxMatchMode,
     SkipImg2ImgOrig,
 )
-from adetailer.common import PredictOutput, ensure_pil_image, safe_mkdir
-from adetailer.mask import (
+from adetailer_custom.common import PredictOutput, ensure_pil_image, safe_mkdir
+from adetailer_custom.mask import (
     expand_bbox,
     expand_masks_by_bboxes,
     filter_by_ratio,
@@ -61,8 +43,8 @@ from adetailer.mask import (
     mask_preprocess,
     sort_bboxes,
 )
-from adetailer.opts import dynamic_denoise_strength, optimal_crop_size
-from controlnet_ext import (
+from adetailer_custom.opts import dynamic_denoise_strength, optimal_crop_size
+from adetailer_custom_controlnet_ext import (
     CNHijackRestore,
     ControlNetExt,
     cn_allow_script_control,
@@ -70,6 +52,24 @@ from controlnet_ext import (
     controlnet_type,
     get_cn_models,
 )
+from adetailer_custom_ui.conditional import create_binary_mask, schedulers
+from adetailer_custom_ui.helper import (
+    PPImage,
+    copy_extra_params,
+    disable_safe_unpickle,
+    pause_total_tqdm,
+    preserve_prompts,
+)
+from adetailer_custom_ui.p_method import (
+    get_i,
+    is_img2img_inpaint,
+    is_inpaint_only_masked,
+    is_skip_img2img,
+    need_call_postprocess,
+    need_call_process,
+)
+from adetailer_custom_ui.traceback import rich_traceback
+from adetailer_custom_ui.ui import WebuiInfo, adui, ordinal, suffix
 from modules import images, paths, script_callbacks, scripts, shared
 from modules.devices import NansException
 from modules.processing import (
@@ -86,11 +86,11 @@ if TYPE_CHECKING:
 
 PARAMS_TXT = "params.txt"
 
-no_huggingface = getattr(cmd_opts, "ad_no_huggingface", False)
+no_huggingface = getattr(cmd_opts, "ad_custom_no_huggingface", False)
 adetailer_dir = Path(paths.models_path, "adetailer")
 safe_mkdir(adetailer_dir)
 
-extra_models_dirs = shared.opts.data.get("ad_extra_models_dir", "")
+extra_models_dirs = shared.opts.data.get("ad_custom_extra_models_dir", "")
 model_mapping = get_models(
     adetailer_dir,
     *extra_models_dirs.split("|"),
@@ -102,7 +102,7 @@ txt2img_submit_button = cast(gr.Button, txt2img_submit_button)
 img2img_submit_button = cast(gr.Button, img2img_submit_button)
 
 print(
-    f"[-] ADetailer initialized. version: {__version__}, num models: {len(model_mapping)}"
+    f"[-] ADetailer Custom initialized. version: {__version__}, num models: {len(model_mapping)}"
 )
 
 
@@ -123,7 +123,7 @@ class AfterDetailerScript(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        num_models = opts.data.get("ad_max_models", 2)
+        num_models = opts.data.get("ad_custom_max_models", 2)
         ad_model_list = list(model_mapping.keys())
         sampler_names = [sampler.name for sampler in all_samplers]
         scheduler_names = [x.label for x in schedulers]
@@ -157,7 +157,7 @@ class AfterDetailerScript(scripts.Script):
             except ImportError:
                 error = traceback.format_exc()
                 print(
-                    f"[-] ADetailer: ControlNetExt init failed:\n{error}",
+                    f"[-] ADetailer Custom: ControlNetExt init failed:\n{error}",
                     file=sys.stderr,
                 )
 
@@ -220,7 +220,7 @@ class AfterDetailerScript(scripts.Script):
 
         if is_img2img_inpaint(p):
             p._ad_disabled = True
-            msg = "[-] ADetailer: img2img inpainting with skip img2img is not supported. (because it's buggy)"
+            msg = "[-] ADetailer Custom: img2img inpainting with skip img2img is not supported. (because it's buggy)"
             print(msg)
             return
 
@@ -239,7 +239,7 @@ class AfterDetailerScript(scripts.Script):
         args = [arg for arg in args_ if isinstance(arg, dict)]
 
         if not args:
-            message = f"[-] ADetailer: Invalid arguments passed to ADetailer: {args_!r}"
+            message = f"[-] ADetailer Custom: Invalid arguments passed to ADetailer Custom: {args_!r}"
             raise ValueError(message)
 
         if hasattr(p, "_ad_xyz"):
@@ -251,14 +251,14 @@ class AfterDetailerScript(scripts.Script):
             try:
                 inp = ADetailerArgs(**arg_dict)
             except ValueError:
-                msg = f"[-] ADetailer: ValidationError when validating {ordinal(n)} arguments:"
+                msg = f"[-] ADetailer Custom: ValidationError when validating {ordinal(n)} arguments:"
                 print(msg, arg_dict, file=sys.stderr)
                 continue
 
             all_inputs.append(inp)
 
         if not all_inputs:
-            msg = "[-] ADetailer: No valid arguments found."
+            msg = "[-] ADetailer Custom: No valid arguments found."
             raise ValueError(msg)
         return all_inputs
 
@@ -266,7 +266,7 @@ class AfterDetailerScript(scripts.Script):
         params = {}
         for n, args in enumerate(arg_list):
             params.update(args.extra_params(suffix=suffix(n)))
-        params["ADetailer version"] = __version__
+        params["ADetailer Custom version"] = __version__
         return params
 
     @staticmethod
@@ -274,7 +274,12 @@ class AfterDetailerScript(scripts.Script):
         use_cpu = getattr(shared.cmd_opts, "use_cpu", ()) or ()
         if isinstance(use_cpu, str):
             use_cpu = (use_cpu,)
-        if "all" in use_cpu or "adetailer" in use_cpu:
+        if (
+            "all" in use_cpu
+            or "adetailer_custom" in use_cpu
+            or "adetailer-custom" in use_cpu
+            or "adetailer" in use_cpu
+        ):
             return "cpu"
 
         if platform.system() == "Darwin":
@@ -380,13 +385,7 @@ class AfterDetailerScript(scripts.Script):
         return p.width, p.height
 
     def get_width_height(self, p, args: ADetailerArgs) -> tuple[int, int]:
-        if not args.ad_inpaint_only_masked:
-            if args.ad_use_inpaint_width_height:
-                print(
-                    "[-] ADetailer: Use separate width/height is ignored when Inpaint only masked is off to preserve the full canvas size."
-                )
-            width, height = self.get_canvas_width_height(p)
-        elif args.ad_use_inpaint_width_height:
+        if args.ad_use_inpaint_width_height:
             width = args.ad_inpaint_width
             height = args.ad_inpaint_height
         else:
@@ -492,11 +491,11 @@ class AfterDetailerScript(scripts.Script):
         script_runner = copy(p.scripts)
         script_args = self.script_args_copy(p.script_args)
 
-        ad_only_selected_scripts = opts.data.get("ad_only_selected_scripts", True)
+        ad_only_selected_scripts = opts.data.get("ad_custom_only_selected_scripts", True)
         if not ad_only_selected_scripts:
             return script_runner, script_args
 
-        ad_script_names_string: str = opts.data.get("ad_script_names", SCRIPT_DEFAULT)
+        ad_script_names_string: str = opts.data.get("ad_custom_script_names", SCRIPT_DEFAULT)
         ad_script_names = ad_script_names_string.split(",") + BUILTIN_SCRIPT.split(",")
         script_names_set = {
             name
@@ -617,7 +616,7 @@ class AfterDetailerScript(scripts.Script):
             save_prompt = p.prompt
         seed, _ = self.get_seed(p)
 
-        ad_save_images_dir: str = opts.data.get("ad_save_images_dir", "")
+        ad_save_images_dir: str = opts.data.get("ad_custom_save_images_dir", "")
 
         if not ad_save_images_dir.strip():
             ad_save_images_dir = p.outpath_samples
@@ -636,12 +635,12 @@ class AfterDetailerScript(scripts.Script):
 
     def get_ad_model(self, name: str):
         if name not in model_mapping:
-            msg = f"[-] ADetailer: Model {name!r} not found. Available models: {list(model_mapping.keys())}"
+            msg = f"[-] ADetailer Custom: Model {name!r} not found. Available models: {list(model_mapping.keys())}"
             raise ValueError(msg)
         return model_mapping[name]
 
     def sort_bboxes(self, pred: PredictOutput) -> PredictOutput:
-        sortby = opts.data.get("ad_bbox_sortby", BBOX_SORTBY[0])
+        sortby = opts.data.get("ad_custom_bbox_sortby", BBOX_SORTBY[0])
         sortby_idx = BBOX_SORTBY.index(sortby)
         return sort_bboxes(pred, sortby_idx)
 
@@ -688,22 +687,22 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def compare_prompt(extra_params: dict[str, Any], processed, n: int = 0):
-        pt = "ADetailer prompt" + suffix(n)
+        pt = "ADetailer Custom prompt" + suffix(n)
         if pt in extra_params and extra_params[pt] != processed.all_prompts[0]:
             print(
-                f"[-] ADetailer: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
+                f"[-] ADetailer Custom: applied {ordinal(n + 1)} ad_prompt: {processed.all_prompts[0]!r}"
             )
 
-        ng = "ADetailer negative prompt" + suffix(n)
+        ng = "ADetailer Custom negative prompt" + suffix(n)
         if ng in extra_params and extra_params[ng] != processed.all_negative_prompts[0]:
             print(
-                f"[-] ADetailer: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
+                f"[-] ADetailer Custom: applied {ordinal(n + 1)} ad_negative_prompt: {processed.all_negative_prompts[0]!r}"
             )
 
     @staticmethod
     def update_runtime_params(extra_params: dict[str, Any], p2, n: int = 0) -> None:
         tag = suffix(n)
-        extra_params["ADetailer actual inpaint size" + tag] = (
+        extra_params["ADetailer Custom actual inpaint size" + tag] = (
             f"{p2.width}x{p2.height}"
         )
 
@@ -711,7 +710,7 @@ class AfterDetailerScript(scripts.Script):
         if init_images:
             init_image = init_images[0]
             if hasattr(init_image, "size"):
-                extra_params["ADetailer actual canvas size" + tag] = (
+                extra_params["ADetailer Custom actual canvas size" + tag] = (
                     f"{init_image.size[0]}x{init_image.size[1]}"
                 )
 
@@ -723,7 +722,7 @@ class AfterDetailerScript(scripts.Script):
 
     @staticmethod
     def get_each_tab_seed(seed: int, i: int):
-        use_same_seed = shared.opts.data.get("ad_same_seed_for_each_tab", False)
+        use_same_seed = shared.opts.data.get("ad_custom_same_seed_for_each_tab", False)
         return seed if use_same_seed else seed + i
 
     @staticmethod
@@ -751,7 +750,7 @@ class AfterDetailerScript(scripts.Script):
     def get_dynamic_denoise_strength(
         denoise_strength: float, bbox: Sequence[Any], image_size: tuple[int, int]
     ):
-        denoise_power = opts.data.get("ad_dynamic_denoise_power", 0)
+        denoise_power = opts.data.get("ad_custom_dynamic_denoise_power", 0)
         if denoise_power == 0:
             return denoise_strength
 
@@ -763,7 +762,7 @@ class AfterDetailerScript(scripts.Script):
         )
 
         print(
-            f"[-] ADetailer: dynamic denoising -- {denoise_strength:.2f} -> {modified_strength:.2f}"
+            f"[-] ADetailer Custom: dynamic denoising -- {denoise_strength:.2f} -> {modified_strength:.2f}"
         )
 
         return modified_strength
@@ -773,7 +772,7 @@ class AfterDetailerScript(scripts.Script):
         inpaint_width: int, inpaint_height: int, bbox: Sequence[Any]
     ) -> tuple[int, int]:
         calculate_optimal_crop = opts.data.get(
-            "ad_match_inpaint_bbox_size", InpaintBBoxMatchMode.OFF.value
+            "ad_custom_match_inpaint_bbox_size", InpaintBBoxMatchMode.OFF.value
         )
 
         optimal_resolution: tuple[int, int] | None = None
@@ -785,7 +784,7 @@ class AfterDetailerScript(scripts.Script):
         # Strict (SDXL only)
         if calculate_optimal_crop == InpaintBBoxMatchMode.STRICT.value:
             if not shared.sd_model.is_sdxl:
-                msg = "[-] ADetailer: strict inpaint bounding box size matching is only available for SDXL. Use Free mode instead."
+                msg = "[-] ADetailer Custom: strict inpaint bounding box size matching is only available for SDXL. Use Free mode instead."
                 print(msg)
                 return (inpaint_width, inpaint_height)
 
@@ -800,7 +799,7 @@ class AfterDetailerScript(scripts.Script):
             )
 
         if optimal_resolution is None:
-            msg = "[-] ADetailer: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
+            msg = "[-] ADetailer Custom: unsupported inpaint bounding box match mode. Original inpainting dimensions will be used."
             print(msg)
             return (inpaint_width, inpaint_height)
 
@@ -810,7 +809,7 @@ class AfterDetailerScript(scripts.Script):
             or abs(optimal_resolution[1] - inpaint_height) > inpaint_height * 0.1
         ):
             print(
-                f"[-] ADetailer: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
+                f"[-] ADetailer Custom: inpaint dimensions optimized -- {inpaint_width}x{inpaint_height} -> {optimal_resolution[0]}x{optimal_resolution[1]}"
             )
 
         return optimal_resolution
@@ -842,7 +841,7 @@ class AfterDetailerScript(scripts.Script):
         if is_img2img_inpaint(p) and is_all_black(self.get_image_mask(p)):
             p._ad_disabled = True
             msg = (
-                "[-] ADetailer: img2img inpainting with no mask -- adetailer disabled."
+                "[-] ADetailer Custom: img2img inpainting with no mask -- ADetailer Custom disabled."
             )
             print(msg)
             return
@@ -872,8 +871,8 @@ class AfterDetailerScript(scripts.Script):
         if args.ad_controlnet_model in ["None", "Passthrough"]:
             return nullcontext()
 
-        # ON: rely on ADetailer/ReForge's own inpaint crop pipeline.
-        # OFF: pass the full current canvas and the actual ADetailer mask.
+        # ON: rely on ADetailer Custom/ReForge's own inpaint crop pipeline.
+        # OFF: pass the full current canvas and the actual ADetailer Custom mask.
         cn_image = None
         cn_mask = ensure_pil_image(p2.image_mask, "L")
         p2._ad_controlnet_disable_batch_dir = True
@@ -925,7 +924,7 @@ class AfterDetailerScript(scripts.Script):
 
         if pred.preview is None:
             print(
-                f"[-] ADetailer: nothing detected on image {i + 1} with {ordinal(n + 1)} settings."
+                f"[-] ADetailer Custom: nothing detected on image {i + 1} with {ordinal(n + 1)} settings."
             )
             return False
 
@@ -935,7 +934,7 @@ class AfterDetailerScript(scripts.Script):
         self.save_image(
             p,
             pred.preview,
-            condition="ad_save_previews",
+            condition="ad_custom_save_previews",
             suffix="-ad-preview" + suffix(n, "-"),
         )
 
@@ -963,7 +962,7 @@ class AfterDetailerScript(scripts.Script):
                 with controlnet_context:
                     processed = process_images(p2)
             except NansException as e:
-                msg = f"[-] ADetailer: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
+                msg = f"[-] ADetailer Custom: 'NansException' occurred with {ordinal(n + 1)} settings.\n{e}"
                 print(msg, file=sys.stderr)
                 continue
             finally:
@@ -1008,7 +1007,7 @@ class AfterDetailerScript(scripts.Script):
 
         if is_processed and not is_skip_img2img(p):
             self.save_image(
-                p, init_image, condition="ad_save_images_before", suffix="-ad-before"
+                p, init_image, condition="ad_custom_save_images_before", suffix="-ad-before"
             )
 
         if need_call_process(p):
@@ -1031,9 +1030,9 @@ def on_after_component(component, **_kwargs):
 
 
 def on_ui_settings():
-    section = ("ADetailer", ADETAILER)
+    section = ("ADetailer Custom", ADETAILER)
     shared.opts.add_option(
-        "ad_max_models",
+        "ad_custom_max_models",
         shared.OptionInfo(
             default=4,
             label="Max tabs",
@@ -1044,10 +1043,10 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_extra_models_dir",
+        "ad_custom_extra_models_dir",
         shared.OptionInfo(
             default="",
-            label="Extra paths to scan adetailer models separated by vertical bars(|)",
+            label="Extra paths to scan ADetailer Custom models separated by vertical bars(|)",
             component=gr.Textbox,
             section=section,
         )
@@ -1056,32 +1055,32 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_save_images_dir",
+        "ad_custom_save_images_dir",
         shared.OptionInfo(
             default="",
-            label="Output directory for adetailer images",
+            label="Output directory for ADetailer Custom images",
             component=gr.Textbox,
             section=section,
         ),
     )
 
     shared.opts.add_option(
-        "ad_save_previews",
+        "ad_custom_save_previews",
         shared.OptionInfo(default=False, label="Save mask previews", section=section),
     )
 
     shared.opts.add_option(
-        "ad_save_images_before",
+        "ad_custom_save_images_before",
         shared.OptionInfo(
-            default=False, label="Save images before ADetailer", section=section
+            default=False, label="Save images before ADetailer Custom", section=section
         ),
     )
 
     shared.opts.add_option(
-        "ad_only_selected_scripts",
+        "ad_custom_only_selected_scripts",
         shared.OptionInfo(
             default=True,
-            label="Apply only selected scripts to ADetailer",
+            label="Apply only selected scripts to ADetailer Custom",
             section=section,
         ),
     )
@@ -1092,10 +1091,10 @@ def on_ui_settings():
     }
 
     shared.opts.add_option(
-        "ad_script_names",
+        "ad_custom_script_names",
         shared.OptionInfo(
             default=SCRIPT_DEFAULT,
-            label="Script names to apply to ADetailer (separated by comma)",
+            label="Script names to apply to ADetailer Custom (separated by comma)",
             component=gr.Textbox,
             component_args=textbox_args,
             section=section,
@@ -1103,7 +1102,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_bbox_sortby",
+        "ad_custom_bbox_sortby",
         shared.OptionInfo(
             default="None",
             label="Sort bounding boxes by",
@@ -1114,16 +1113,16 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_same_seed_for_each_tab",
+        "ad_custom_same_seed_for_each_tab",
         shared.OptionInfo(
             default=False,
-            label="Use same seed for each tab in adetailer",
+            label="Use same seed for each tab in ADetailer Custom",
             section=section,
         ),
     )
 
     shared.opts.add_option(
-        "ad_dynamic_denoise_power",
+        "ad_custom_dynamic_denoise_power",
         shared.OptionInfo(
             default=0,
             label="Power scaling for dynamic denoise strength based on bounding box size",
@@ -1136,7 +1135,7 @@ def on_ui_settings():
     )
 
     shared.opts.add_option(
-        "ad_match_inpaint_bbox_size",
+        "ad_custom_match_inpaint_bbox_size",
         shared.OptionInfo(
             default=InpaintBBoxMatchMode.OFF.value,  # Off
             component=gr.Radio,
@@ -1189,83 +1188,83 @@ def make_axis_on_xyz_grid():
 
     axis = [
         xyz_grid.AxisOption(
-            "[ADetailer] ADetailer model 1st",
+            "[ADetailer Custom] model 1st",
             str,
             partial(set_value, field="ad_model"),
             choices=lambda: model_list,
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] ADetailer prompt 1st",
+            "[ADetailer Custom] prompt 1st",
             str,
             partial(set_value, field="ad_prompt"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] ADetailer negative prompt 1st",
+            "[ADetailer Custom] negative prompt 1st",
             str,
             partial(set_value, field="ad_negative_prompt"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] Prompt S/R (AD 1st)",
+            "[ADetailer Custom] Prompt S/R (AD 1st)",
             str,
             partial(search_and_replace_prompt, replace_in_main_prompt=False),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] Prompt S/R (AD 1st and main prompt)",
+            "[ADetailer Custom] Prompt S/R (AD 1st and main prompt)",
             str,
             partial(search_and_replace_prompt, replace_in_main_prompt=True),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] Mask erosion / dilation 1st",
+            "[ADetailer Custom] Mask erosion / dilation 1st",
             int,
             partial(set_value, field="ad_dilate_erode"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] Inpaint denoising strength 1st",
+            "[ADetailer Custom] Inpaint denoising strength 1st",
             float,
             partial(set_value, field="ad_denoising_strength"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] CFG scale 1st",
+            "[ADetailer Custom] CFG scale 1st",
             float,
             partial(set_value, field="ad_cfg_scale"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] Inpaint only masked 1st",
+            "[ADetailer Custom] Inpaint only masked 1st",
             str,
             partial(set_value, field="ad_inpaint_only_masked"),
             choices=lambda: ["True", "False"],
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] Inpaint only masked padding 1st",
+            "[ADetailer Custom] Inpaint only masked padding 1st",
             int,
             partial(set_value, field="ad_inpaint_only_masked_padding"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] ADetailer sampler 1st",
+            "[ADetailer Custom] sampler 1st",
             str,
             partial(set_value, field="ad_sampler"),
             choices=lambda: xyz_samplers,
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] ADetailer scheduler 1st",
+            "[ADetailer Custom] scheduler 1st",
             str,
             partial(set_value, field="ad_scheduler"),
             choices=lambda: xyz_schedulers,
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] noise multiplier 1st",
+            "[ADetailer Custom] noise multiplier 1st",
             float,
             partial(set_value, field="ad_noise_multiplier"),
         ),
         xyz_grid.AxisOption(
-            "[ADetailer] ControlNet model 1st",
+            "[ADetailer Custom] ControlNet model 1st",
             str,
             partial(set_value, field="ad_controlnet_model"),
             choices=lambda: ["None", "Passthrough", *get_cn_models()],
         ),
     ]
 
-    if not any(x.label.startswith("[ADetailer]") for x in xyz_grid.axis_options):
+    if not any(x.label.startswith("[ADetailer Custom]") for x in xyz_grid.axis_options):
         xyz_grid.axis_options.extend(axis)
 
 
@@ -1275,7 +1274,7 @@ def on_before_ui():
     except Exception:
         error = traceback.format_exc()
         print(
-            f"[-] ADetailer: xyz_grid error:\n{error}",
+            f"[-] ADetailer Custom: xyz_grid error:\n{error}",
             file=sys.stderr,
         )
 
@@ -1284,17 +1283,17 @@ def on_before_ui():
 
 
 def add_api_endpoints(_: gr.Blocks, app: FastAPI):
-    @app.get("/adetailer/v1/version")
+    @app.get("/adetailer-custom/v1/version")
     async def version():
         return {"version": __version__}
 
-    @app.get("/adetailer/v1/schema")
+    @app.get("/adetailer-custom/v1/schema")
     async def schema():
         if hasattr(ADetailerArgs, "model_json_schema"):
             return ADetailerArgs.model_json_schema()
         return ADetailerArgs.schema()
 
-    @app.get("/adetailer/v1/ad_model")
+    @app.get("/adetailer-custom/v1/ad_model")
     async def ad_model():
         return {"ad_model": list(model_mapping)}
 

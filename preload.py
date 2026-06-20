@@ -3,7 +3,7 @@ import argparse
 
 def preload(parser: argparse.ArgumentParser):
     parser.add_argument(
-        "--ad-no-huggingface",
+        "--ad-custom-no-huggingface",
         action="store_true",
-        help="Don't use adetailer models from huggingface",
+        help="Don't use ADetailer Custom models from huggingface",
     )

@@ -4,7 +4,7 @@ import torch
 from huggingface_hub import hf_hub_download
 from PIL import Image
 
-from adetailer.ultralytics import mask_to_pil, ultralytics_predict
+from adetailer_custom.ultralytics import mask_to_pil, ultralytics_predict
 
 
 @pytest.mark.parametrize(

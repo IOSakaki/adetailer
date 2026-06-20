@@ -12,7 +12,7 @@ import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
 
 
 def _log(msg: str):
-    print(f"[ADetailer install] {msg}")
+    print(f"[ADetailer Custom install] {msg}")  # noqa: T201
 
 
 def is_installed(
@@ -57,7 +57,8 @@ def _pillow_health_check(stage: str):
         _log(f"Pillow import check ({stage}) failed: {e}")
         _log("If you are using ReForge/Forge, repair in that venv with:")
         _log(f'  "{sys.executable}" -m pip install --force-reinstall "Pillow==10.4.0"')
-        raise RuntimeError("Pillow import failed. See guidance above.") from e
+        msg = "Pillow import failed. See guidance above."
+        raise RuntimeError(msg) from e
 
     try:
         pillow_ver = version("Pillow")
