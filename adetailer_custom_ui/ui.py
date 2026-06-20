@@ -25,6 +25,7 @@ if controlnet_type == "forge":
     noobai_modules.extend(m for m in inpaint_modules if m not in noobai_modules)
 
     cn_module_choices = {
+        "lllite": ["None"],
         "noobai": noobai_modules,
         "inpaint": inpaint_modules,
         "lineart": list(global_state.get_filtered_preprocessors("Lineart")),
@@ -35,6 +36,7 @@ if controlnet_type == "forge":
     }
 else:
     cn_module_choices = {
+        "lllite": ["None"],
         "noobai": [
             "inpaint_noobai",
             "inpaint_global_harmonious",

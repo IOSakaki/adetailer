@@ -18,6 +18,10 @@ controlnet_type = "standard"
 controlnet_path = None
 cn_base_path = ""
 
+
+def normalize_name(name: str) -> str:
+    return name.lower().replace("-", "").replace("_", "").replace(" ", "")
+
 for extension in extensions.active():
     if not extension.enabled:
         continue
@@ -71,8 +75,9 @@ class ControlNetExt:
         if module == "None":
             module = None
         if module is None:
+            normalized_model = normalize_name(model)
             for m, v in cn_model_module.items():
-                if m in model:
+                if normalize_name(m) in normalized_model:
                     module = v
                     break
 
