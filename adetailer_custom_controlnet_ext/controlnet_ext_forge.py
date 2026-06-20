@@ -11,10 +11,14 @@ from lib_controlnet.external_code import ControlNetUnit
 from modules import scripts
 from modules.processing import StableDiffusionProcessing
 
-from .common import cn_model_regex
+from .common import cn_model_module, cn_model_regex
 
 controlnet_exists = True
 controlnet_type = "forge"
+
+
+def normalize_name(name: str) -> str:
+    return name.lower().replace("-", "").replace("_", "").replace(" ", "")
 
 
 def find_script(p: StableDiffusionProcessing, script_title: str) -> scripts.Script:
@@ -79,6 +83,21 @@ class ControlNetExt:
             mask = np.repeat(mask, 3, axis=2)
         return mask
 
+    @staticmethod
+    def _resolve_module_name(module: str | None) -> str | None:
+        if module is None:
+            return None
+        if global_state.get_preprocessor(module) is not None:
+            return module
+
+        normalized_module = normalize_name(module)
+        if normalized_module == "inpaintnoobai":
+            for name in global_state.get_all_preprocessor_names():
+                if normalize_name(name).startswith("inpaintnoobai"):
+                    return name
+
+        return module
+
     def update_scripts_args(  # noqa: PLR0913
         self,
         p,
@@ -92,6 +111,17 @@ class ControlNetExt:
     ):
         if (not self.cn_available) or model == "None":
             return
+
+        if module == "None":
+            module = None
+        if module is None:
+            normalized_model = model.lower().replace("-", "").replace("_", "").replace(" ", "")
+            for key, value in cn_model_module.items():
+                normalized_key = key.lower().replace("-", "").replace("_", "").replace(" ", "")
+                if normalized_key in normalized_model:
+                    module = value
+                    break
+        module = self._resolve_module_name(module)
 
         p._ad_controlnet_disable_batch_dir = True
 

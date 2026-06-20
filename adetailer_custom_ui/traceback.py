@@ -157,7 +157,7 @@ def rich_traceback(func: Callable[P, T]) -> Callable[P, T]:
                 for title, data in [
                     ("System info", sys_info()),
                     ("Inputs", processing(*args)),
-                    ("ADetailer Custom", ad_args(*args)),
+                    ("ADetailer", ad_args(*args)),
                 ]
                 if data
             ]

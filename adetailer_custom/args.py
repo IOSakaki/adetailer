@@ -135,85 +135,85 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
         p = {name: getattr(self, attr) for attr, name in ALL_ARGS}
         ppop = partial(self.ppop, p)
 
-        ppop("ADetailer Custom model classes")
-        ppop("ADetailer Custom prompt")
-        ppop("ADetailer Custom prompt append")
-        ppop("ADetailer Custom negative prompt")
-        ppop("ADetailer Custom negative prompt append")
-        p.pop("ADetailer Custom tab enable", None)  # always pop
+        ppop("ADetailer model classes")
+        ppop("ADetailer prompt")
+        ppop("ADetailer prompt append")
+        ppop("ADetailer negative prompt")
+        ppop("ADetailer negative prompt append")
+        p.pop("ADetailer tab enable", None)  # always pop
         ppop(
-            "ADetailer Custom mask only top k",
-            ["ADetailer Custom mask only top k", "ADetailer Custom method to decide top k masks"],
+            "ADetailer mask only top k",
+            ["ADetailer mask only top k", "ADetailer method to decide top k masks"],
             cond=0,
         )
-        ppop("ADetailer Custom mask min ratio", cond=0.0)
-        ppop("ADetailer Custom mask max ratio", cond=1.0)
-        ppop("ADetailer Custom x offset", cond=0)
-        ppop("ADetailer Custom y offset", cond=0)
-        ppop("ADetailer Custom mask merge invert", cond="None")
-        ppop("ADetailer Custom mask bbox expansion", cond=0)
-        ppop("ADetailer Custom inpaint masked content", cond="original")
-        ppop("ADetailer Custom inpaint only masked", ["ADetailer Custom inpaint padding"])
+        ppop("ADetailer mask min ratio", cond=0.0)
+        ppop("ADetailer mask max ratio", cond=1.0)
+        ppop("ADetailer x offset", cond=0)
+        ppop("ADetailer y offset", cond=0)
+        ppop("ADetailer mask merge invert", cond="None")
+        ppop("ADetailer mask bbox expansion", cond=0)
+        ppop("ADetailer inpaint masked content", cond="original")
+        ppop("ADetailer inpaint only masked", ["ADetailer inpaint padding"])
         ppop(
-            "ADetailer Custom use inpaint width height",
+            "ADetailer use inpaint width height",
             [
-                "ADetailer Custom use inpaint width height",
-                "ADetailer Custom inpaint width",
-                "ADetailer Custom inpaint height",
+                "ADetailer use inpaint width height",
+                "ADetailer inpaint width",
+                "ADetailer inpaint height",
             ],
         )
         ppop(
-            "ADetailer Custom use separate steps",
-            ["ADetailer Custom use separate steps", "ADetailer Custom steps"],
+            "ADetailer use separate steps",
+            ["ADetailer use separate steps", "ADetailer steps"],
         )
         ppop(
-            "ADetailer Custom use separate CFG scale",
-            ["ADetailer Custom use separate CFG scale", "ADetailer Custom CFG scale"],
+            "ADetailer use separate CFG scale",
+            ["ADetailer use separate CFG scale", "ADetailer CFG scale"],
         )
         ppop(
-            "ADetailer Custom use separate checkpoint",
-            ["ADetailer Custom use separate checkpoint", "ADetailer Custom checkpoint"],
+            "ADetailer use separate checkpoint",
+            ["ADetailer use separate checkpoint", "ADetailer checkpoint"],
         )
         ppop(
-            "ADetailer Custom use separate VAE",
-            ["ADetailer Custom use separate VAE", "ADetailer Custom VAE"],
+            "ADetailer use separate VAE",
+            ["ADetailer use separate VAE", "ADetailer VAE"],
         )
         ppop(
-            "ADetailer Custom use separate sampler",
+            "ADetailer use separate sampler",
             [
-                "ADetailer Custom use separate sampler",
-                "ADetailer Custom sampler",
-                "ADetailer Custom scheduler",
+                "ADetailer use separate sampler",
+                "ADetailer sampler",
+                "ADetailer scheduler",
             ],
         )
-        ppop("ADetailer Custom scheduler", cond="Use same scheduler")
+        ppop("ADetailer scheduler", cond="Use same scheduler")
         ppop(
-            "ADetailer Custom use separate noise multiplier",
-            ["ADetailer Custom use separate noise multiplier", "ADetailer Custom noise multiplier"],
+            "ADetailer use separate noise multiplier",
+            ["ADetailer use separate noise multiplier", "ADetailer noise multiplier"],
         )
 
         ppop(
-            "ADetailer Custom use separate CLIP skip",
-            ["ADetailer Custom use separate CLIP skip", "ADetailer Custom CLIP skip"],
+            "ADetailer use separate CLIP skip",
+            ["ADetailer use separate CLIP skip", "ADetailer CLIP skip"],
         )
 
-        ppop("ADetailer Custom restore face")
+        ppop("ADetailer restore face")
         ppop(
-            "ADetailer Custom ControlNet model",
+            "ADetailer ControlNet model",
             [
-                "ADetailer Custom ControlNet model",
-                "ADetailer Custom ControlNet module",
-                "ADetailer Custom ControlNet weight",
-                "ADetailer Custom ControlNet guidance start",
-                "ADetailer Custom ControlNet guidance end",
-                "ADetailer Custom ControlNet use ADetailer Custom crop input",
+                "ADetailer ControlNet model",
+                "ADetailer ControlNet module",
+                "ADetailer ControlNet weight",
+                "ADetailer ControlNet guidance start",
+                "ADetailer ControlNet guidance end",
+                "ADetailer ControlNet use ADetailer crop input",
             ],
             cond="None",
         )
-        ppop("ADetailer Custom ControlNet module", cond="None")
-        ppop("ADetailer Custom ControlNet weight", cond=1.0)
-        ppop("ADetailer Custom ControlNet guidance start", cond=0.0)
-        ppop("ADetailer Custom ControlNet guidance end", cond=1.0)
+        ppop("ADetailer ControlNet module", cond="None")
+        ppop("ADetailer ControlNet weight", cond=1.0)
+        ppop("ADetailer ControlNet guidance start", cond=0.0)
+        ppop("ADetailer ControlNet guidance end", cond=1.0)
 
         if suffix:
             p = {k + suffix: v for k, v in p.items()}
@@ -228,53 +228,53 @@ class ADetailerArgs(BaseModel, extra=Extra.forbid):
 
 
 _all_args = [
-    ("ad_model", "ADetailer Custom model"),
-    ("ad_model_classes", "ADetailer Custom model classes"),
-    ("ad_tab_enable", "ADetailer Custom tab enable"),
-    ("ad_prompt", "ADetailer Custom prompt"),
-    ("ad_prompt_append", "ADetailer Custom prompt append"),
-    ("ad_negative_prompt", "ADetailer Custom negative prompt"),
-    ("ad_negative_prompt_append", "ADetailer Custom negative prompt append"),
-    ("ad_confidence", "ADetailer Custom confidence"),
-    ("ad_mask_filter_method", "ADetailer Custom method to decide top k masks"),
-    ("ad_mask_k", "ADetailer Custom mask only top k"),
-    ("ad_mask_min_ratio", "ADetailer Custom mask min ratio"),
-    ("ad_mask_max_ratio", "ADetailer Custom mask max ratio"),
-    ("ad_x_offset", "ADetailer Custom x offset"),
-    ("ad_y_offset", "ADetailer Custom y offset"),
-    ("ad_dilate_erode", "ADetailer Custom dilate erode"),
-    ("ad_mask_bbox_expansion", "ADetailer Custom mask bbox expansion"),
-    ("ad_mask_merge_invert", "ADetailer Custom mask merge invert"),
-    ("ad_mask_blur", "ADetailer Custom mask blur"),
-    ("ad_denoising_strength", "ADetailer Custom denoising strength"),
-    ("ad_inpaint_masked_content", "ADetailer Custom inpaint masked content"),
-    ("ad_inpaint_only_masked", "ADetailer Custom inpaint only masked"),
-    ("ad_inpaint_only_masked_padding", "ADetailer Custom inpaint padding"),
-    ("ad_use_inpaint_width_height", "ADetailer Custom use inpaint width height"),
-    ("ad_inpaint_width", "ADetailer Custom inpaint width"),
-    ("ad_inpaint_height", "ADetailer Custom inpaint height"),
-    ("ad_use_steps", "ADetailer Custom use separate steps"),
-    ("ad_steps", "ADetailer Custom steps"),
-    ("ad_use_cfg_scale", "ADetailer Custom use separate CFG scale"),
-    ("ad_cfg_scale", "ADetailer Custom CFG scale"),
-    ("ad_use_checkpoint", "ADetailer Custom use separate checkpoint"),
-    ("ad_checkpoint", "ADetailer Custom checkpoint"),
-    ("ad_use_vae", "ADetailer Custom use separate VAE"),
-    ("ad_vae", "ADetailer Custom VAE"),
-    ("ad_use_sampler", "ADetailer Custom use separate sampler"),
-    ("ad_sampler", "ADetailer Custom sampler"),
-    ("ad_scheduler", "ADetailer Custom scheduler"),
-    ("ad_use_noise_multiplier", "ADetailer Custom use separate noise multiplier"),
-    ("ad_noise_multiplier", "ADetailer Custom noise multiplier"),
-    ("ad_use_clip_skip", "ADetailer Custom use separate CLIP skip"),
-    ("ad_clip_skip", "ADetailer Custom CLIP skip"),
-    ("ad_restore_face", "ADetailer Custom restore face"),
-    ("ad_controlnet_model", "ADetailer Custom ControlNet model"),
-    ("ad_controlnet_module", "ADetailer Custom ControlNet module"),
-    ("ad_controlnet_weight", "ADetailer Custom ControlNet weight"),
-    ("ad_controlnet_guidance_start", "ADetailer Custom ControlNet guidance start"),
-    ("ad_controlnet_guidance_end", "ADetailer Custom ControlNet guidance end"),
-    ("ad_controlnet_use_crop_input", "ADetailer Custom ControlNet use ADetailer Custom crop input"),
+    ("ad_model", "ADetailer model"),
+    ("ad_model_classes", "ADetailer model classes"),
+    ("ad_tab_enable", "ADetailer tab enable"),
+    ("ad_prompt", "ADetailer prompt"),
+    ("ad_prompt_append", "ADetailer prompt append"),
+    ("ad_negative_prompt", "ADetailer negative prompt"),
+    ("ad_negative_prompt_append", "ADetailer negative prompt append"),
+    ("ad_confidence", "ADetailer confidence"),
+    ("ad_mask_filter_method", "ADetailer method to decide top k masks"),
+    ("ad_mask_k", "ADetailer mask only top k"),
+    ("ad_mask_min_ratio", "ADetailer mask min ratio"),
+    ("ad_mask_max_ratio", "ADetailer mask max ratio"),
+    ("ad_x_offset", "ADetailer x offset"),
+    ("ad_y_offset", "ADetailer y offset"),
+    ("ad_dilate_erode", "ADetailer dilate erode"),
+    ("ad_mask_bbox_expansion", "ADetailer mask bbox expansion"),
+    ("ad_mask_merge_invert", "ADetailer mask merge invert"),
+    ("ad_mask_blur", "ADetailer mask blur"),
+    ("ad_denoising_strength", "ADetailer denoising strength"),
+    ("ad_inpaint_masked_content", "ADetailer inpaint masked content"),
+    ("ad_inpaint_only_masked", "ADetailer inpaint only masked"),
+    ("ad_inpaint_only_masked_padding", "ADetailer inpaint padding"),
+    ("ad_use_inpaint_width_height", "ADetailer use inpaint width height"),
+    ("ad_inpaint_width", "ADetailer inpaint width"),
+    ("ad_inpaint_height", "ADetailer inpaint height"),
+    ("ad_use_steps", "ADetailer use separate steps"),
+    ("ad_steps", "ADetailer steps"),
+    ("ad_use_cfg_scale", "ADetailer use separate CFG scale"),
+    ("ad_cfg_scale", "ADetailer CFG scale"),
+    ("ad_use_checkpoint", "ADetailer use separate checkpoint"),
+    ("ad_checkpoint", "ADetailer checkpoint"),
+    ("ad_use_vae", "ADetailer use separate VAE"),
+    ("ad_vae", "ADetailer VAE"),
+    ("ad_use_sampler", "ADetailer use separate sampler"),
+    ("ad_sampler", "ADetailer sampler"),
+    ("ad_scheduler", "ADetailer scheduler"),
+    ("ad_use_noise_multiplier", "ADetailer use separate noise multiplier"),
+    ("ad_noise_multiplier", "ADetailer noise multiplier"),
+    ("ad_use_clip_skip", "ADetailer use separate CLIP skip"),
+    ("ad_clip_skip", "ADetailer CLIP skip"),
+    ("ad_restore_face", "ADetailer restore face"),
+    ("ad_controlnet_model", "ADetailer ControlNet model"),
+    ("ad_controlnet_module", "ADetailer ControlNet module"),
+    ("ad_controlnet_weight", "ADetailer ControlNet weight"),
+    ("ad_controlnet_guidance_start", "ADetailer ControlNet guidance start"),
+    ("ad_controlnet_guidance_end", "ADetailer ControlNet guidance end"),
+    ("ad_controlnet_use_crop_input", "ADetailer ControlNet use ADetailer crop input"),
 ]
 
 _args = [Arg(*args) for args in _all_args]

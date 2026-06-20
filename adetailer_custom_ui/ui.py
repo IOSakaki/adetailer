@@ -20,8 +20,13 @@ from adetailer_custom_ui.conditional import InputAccordion
 if controlnet_type == "forge":
     from lib_controlnet import global_state
 
+    inpaint_modules = list(global_state.get_filtered_preprocessors("Inpaint"))
+    noobai_modules = [m for m in inpaint_modules if "noobai" in m.lower()]
+    noobai_modules.extend(m for m in inpaint_modules if m not in noobai_modules)
+
     cn_module_choices = {
-        "inpaint": list(global_state.get_filtered_preprocessors("Inpaint")),
+        "noobai": noobai_modules,
+        "inpaint": inpaint_modules,
         "lineart": list(global_state.get_filtered_preprocessors("Lineart")),
         "openpose": list(global_state.get_filtered_preprocessors("OpenPose")),
         "tile": list(global_state.get_filtered_preprocessors("Tile")),
@@ -30,6 +35,12 @@ if controlnet_type == "forge":
     }
 else:
     cn_module_choices = {
+        "noobai": [
+            "inpaint_noobai",
+            "inpaint_global_harmonious",
+            "inpaint_only",
+            "inpaint_only+lama",
+        ],
         "inpaint": [
             "inpaint_global_harmonious",
             "inpaint_only",
@@ -159,8 +170,8 @@ def adui(
                     elem_id=eid("ad_version"),
                 )
 
-        infotext_fields.append((ad_enable, "ADetailer Custom enable"))
-        infotext_fields.append((ad_skip_img2img, "ADetailer Custom skip img2img"))
+        infotext_fields.append((ad_enable, "ADetailer enable"))
+        infotext_fields.append((ad_skip_img2img, "ADetailer skip img2img"))
 
         with gr.Group(), gr.Tabs():
             for n in range(num_models):
@@ -200,7 +211,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
         with gr.Row():
             w.ad_model = gr.Dropdown(
-                label="ADetailer Custom detector" + suffix(n),
+                label="ADetailer detector" + suffix(n),
                 choices=model_choices,
                 value=model_choices[0],
                 visible=True,
@@ -211,7 +222,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
 
         with gr.Row():
             w.ad_model_classes = gr.Textbox(
-                label="ADetailer Custom detector classes" + suffix(n),
+                label="ADetailer detector classes" + suffix(n),
                 value="",
                 visible=False,
                 elem_id=eid("ad_model_classes"),
@@ -233,7 +244,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 label="ad_prompt" + suffix(n),
                 show_label=False,
                 lines=3,
-                placeholder="ADetailer Custom prompt"
+                placeholder="ADetailer prompt"
                 + suffix(n)
                 + "\nIf blank, the main prompt is used.",
                 elem_id=eid("ad_prompt"),
@@ -245,7 +256,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 label="ad_negative_prompt" + suffix(n),
                 show_label=False,
                 lines=2,
-                placeholder="ADetailer Custom negative prompt"
+                placeholder="ADetailer negative prompt"
                 + suffix(n)
                 + "\nIf blank, the main negative prompt is used.",
                 elem_id=eid("ad_negative_prompt"),
@@ -259,7 +270,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 lines=2,
                 placeholder="Prompt append"
                 + suffix(n)
-                + "\nAppended to the final ADetailer Custom prompt.",
+                + "\nAppended to the final ADetailer prompt.",
                 elem_id=eid("ad_prompt_append"),
             )
 
@@ -271,7 +282,7 @@ def one_ui_group(n: int, is_img2img: bool, webui_info: WebuiInfo):
                 lines=2,
                 placeholder="Negative prompt append"
                 + suffix(n)
-                + "\nAppended to the final ADetailer Custom negative prompt.",
+                + "\nAppended to the final ADetailer negative prompt.",
                 elem_id=eid("ad_negative_prompt_append"),
             )
 
@@ -527,7 +538,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 )
 
                 w.ad_steps = gr.Slider(
-                    label="ADetailer Custom steps" + suffix(n),
+                    label="ADetailer steps" + suffix(n),
                     minimum=1,
                     maximum=150,
                     step=1,
@@ -552,7 +563,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 )
 
                 w.ad_cfg_scale = gr.Slider(
-                    label="ADetailer Custom CFG scale" + suffix(n),
+                    label="ADetailer CFG scale" + suffix(n),
                     minimum=0.0,
                     maximum=30.0,
                     step=0.5,
@@ -580,7 +591,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 ckpts = ["Use same checkpoint", *webui_info.checkpoints_list]
 
                 w.ad_checkpoint = gr.Dropdown(
-                    label="ADetailer Custom checkpoint" + suffix(n),
+                    label="ADetailer checkpoint" + suffix(n),
                     choices=ckpts,
                     value=ckpts[0],
                     visible=True,
@@ -598,7 +609,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 vaes = ["Use same VAE", *webui_info.vae_list]
 
                 w.ad_vae = gr.Dropdown(
-                    label="ADetailer Custom VAE" + suffix(n),
+                    label="ADetailer VAE" + suffix(n),
                     choices=vaes,
                     value=vaes[0],
                     visible=True,
@@ -620,7 +631,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
 
             with gr.Row():
                 w.ad_sampler = gr.Dropdown(
-                    label="ADetailer Custom sampler" + suffix(n),
+                    label="ADetailer sampler" + suffix(n),
                     choices=sampler_names,
                     value=sampler_names[1],
                     visible=True,
@@ -632,7 +643,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                     *webui_info.scheduler_names,
                 ]
                 w.ad_scheduler = gr.Dropdown(
-                    label="ADetailer Custom scheduler" + suffix(n),
+                    label="ADetailer scheduler" + suffix(n),
                     choices=scheduler_names,
                     value=scheduler_names[0],
                     visible=len(scheduler_names) > 1,
@@ -681,7 +692,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
                 )
 
                 w.ad_clip_skip = gr.Slider(
-                    label="ADetailer Custom CLIP skip" + suffix(n),
+                    label="ADetailer CLIP skip" + suffix(n),
                     minimum=1,
                     maximum=12,
                     step=1,
@@ -699,7 +710,7 @@ def inpainting(w: Widgets, n: int, is_img2img: bool, webui_info: WebuiInfo):  # 
 
         with gr.Row(), gr.Column(variant="compact"):
             w.ad_restore_face = gr.Checkbox(
-                label="Restore faces after ADetailer Custom" + suffix(n),
+                label="Restore faces after ADetailer" + suffix(n),
                 value=False,
                 elem_id=eid("ad_restore_face"),
             )
@@ -773,7 +784,7 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
             )
 
             w.ad_controlnet_use_crop_input = gr.Checkbox(
-                label="Use ADetailer Custom crop as ControlNet input" + suffix(n),
+                label="Use ADetailer crop as ControlNet input" + suffix(n),
                 value=True,
                 visible=True,
                 interactive=controlnet_exists,

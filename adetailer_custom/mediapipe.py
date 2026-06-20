@@ -25,7 +25,7 @@ def mediapipe_predict(
             return func(image, confidence)
         except Exception:
             return PredictOutput()
-    msg = f"[-] ADetailer Custom: Invalid mediapipe model type: {model_type}, Available: {list(mapping.keys())!r}"
+    msg = f"[-] ADetailer: Invalid mediapipe model type: {model_type}, Available: {list(mapping.keys())!r}"
     raise RuntimeError(msg)
 
 

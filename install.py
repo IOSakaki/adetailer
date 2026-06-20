@@ -12,7 +12,7 @@ import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
 
 
 def _log(msg: str):
-    print(f"[ADetailer Custom install] {msg}")  # noqa: T201
+    print(f"[ADetailer install] {msg}")  # noqa: T201
 
 
 def is_installed(
