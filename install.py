@@ -8,7 +8,11 @@ from importlib.metadata import PackageNotFoundError, version  # python >= 3.8
 
 from packaging.version import parse
 
-import_name = {"py-cpuinfo": "cpuinfo", "protobuf": "google.protobuf"}
+import_name = {
+    "huggingface-hub": "huggingface_hub",
+    "py-cpuinfo": "cpuinfo",
+    "protobuf": "google.protobuf",
+}
 
 
 def _log(msg: str):
@@ -83,6 +87,7 @@ def run_pip(*args, no_deps: bool = False):
 
 def install():
     deps = [
+        ("huggingface-hub", None, None),
         ("ultralytics", "8.3.75", None),
         ("mediapipe", "0.10.13", None),
         ("rich", "13.0.0", None),

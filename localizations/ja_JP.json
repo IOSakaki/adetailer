@@ -104,5 +104,21 @@
     "ControlNet guidance end": "ControlNet終了位置",
     "Generation progress where ControlNet stops affecting the image. 1.0 means until the end.": "生成のどの時点でControlNetを止めるかを決めます。1.0なら最後まで効きます。",
     "Use ADetailer crop as ControlNet input": "ADetailerの切り出しをControlNet入力に使う",
-    "On uses the ADetailer crop as ControlNet input. Off uses the full current canvas with the ADetailer mask.": "ONではADetailerの切り出し画像をControlNetに渡します。OFFでは現在のキャンバス全体とADetailerマスクを渡します。"
+    "On uses the ADetailer crop as ControlNet input. Off uses the full current canvas with the ADetailer mask.": "ONではADetailerの切り出し画像をControlNetに渡します。OFFでは現在のキャンバス全体とADetailerマスクを渡します。",
+    "ControlNet or LLLite model used only during the ADetailer pass. Passthrough keeps existing ControlNet units instead of adding a new ADetailer unit.": "ADetailer処理中だけ使うControlNetまたはLLLiteモデルです。Passthroughは新しいADetailer用ControlNetを追加せず、既存のControlNet設定を残します。",
+
+    "Max tabs": "最大タブ数",
+    "Extra paths to scan ADetailer models separated by vertical bars(|)": "ADetailerモデルを追加検索するパス（|区切り）",
+    "eg. path\\to\\models|C:\\path\\to\\models|another/path/to/models": "例: path\\to\\models|C:\\path\\to\\models|another/path/to/models",
+    "Output directory for ADetailer images": "ADetailer画像の保存先",
+    "Save mask previews": "マスクプレビューを保存",
+    "Save images before ADetailer": "ADetailer処理前の画像を保存",
+    "Apply only selected scripts to ADetailer": "選択したスクリプトだけをADetailerに適用",
+    "Script names to apply to ADetailer (separated by comma)": "ADetailerに適用するスクリプト名（カンマ区切り）",
+    "Sort bounding boxes by": "検出枠の並び順",
+    "Use same seed for each tab in ADetailer": "ADetailerの各タブで同じseedを使う",
+    "Power scaling for dynamic denoise strength based on bounding box size": "検出枠サイズに応じた変化量の自動調整",
+    "Smaller areas get higher denoising, larger areas less. Maximum denoise strength is set by 'Inpaint denoising strength'. 0 = disabled; 1 = linear; 2-4 = recommended": "小さい範囲ほど強く、大きい範囲ほど弱く描き直します。最大値は「インペイントの変化量」で決まります。0で無効、1で線形、2-4が推奨です。",
+    "Try to match inpainting size to bounding box size, if 'Use separate width/height' is not set": "ADetailer用サイズ指定がOFFの時、検出枠に合わせてインペイントサイズを調整",
+    "Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions.": "StrictはSDXL専用で、学習時のSDXL解像度に合わせます。Freeはどのモデルでも使えますが、未対応のサイズになる可能性があります。"
 }

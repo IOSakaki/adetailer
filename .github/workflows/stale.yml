@@ -1,13 +1,9 @@
-name: Close stale issues and PRs
+name: Issue maintenance
 on:
-  schedule:
-    - cron: "30 1 * * *"
+  workflow_dispatch:
 
 jobs:
-  stale:
+  note:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v10
-        with:
-          days-before-stale: 17
-          days-before-close: 3
+      - run: echo "No automatic stale issue closing is configured for ADetailer Custom."

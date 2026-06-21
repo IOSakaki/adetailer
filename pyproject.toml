@@ -4,7 +4,8 @@ description = "ADetailer Custom for reForge and Forge Neo."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "AGPL-3.0" }
-authors = [{ name = "dowon", email = "ks2515@naver.com" }]
+authors = [{ name = "dowon and ADetailer contributors" }]
+maintainers = [{ name = "IOSakaki" }]
 keywords = [
   "adetailer",
   "adetailer-custom",

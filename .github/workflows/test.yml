@@ -3,7 +3,14 @@ name: Test
 on:
   pull_request:
     paths:
-      - "adetailer/**.py"
+      - "adetailer_custom/**.py"
+      - "adetailer_custom_controlnet_ext/**.py"
+      - "adetailer_custom_ui/**.py"
+      - "scripts/**.py"
+      - "tests/**.py"
+      - "install.py"
+      - "preload.py"
+      - "pyproject.toml"
       - ".github/workflows/test.yml"
   workflow_call:
   workflow_dispatch:
@@ -22,7 +29,6 @@ jobs:
           - "3.11"
           - "3.12"
           - "3.13"
-          - "3.14"
 
     steps:
       - uses: actions/checkout@v6

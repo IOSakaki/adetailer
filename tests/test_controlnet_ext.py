@@ -3,7 +3,9 @@ from pathlib import Path
 
 
 def load_common_module():
-    common_path = Path(__file__).parents[1] / "controlnet_ext" / "common.py"
+    common_path = (
+        Path(__file__).parents[1] / "adetailer_custom_controlnet_ext" / "common.py"
+    )
     spec = importlib.util.spec_from_file_location("controlnet_ext_common", common_path)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None

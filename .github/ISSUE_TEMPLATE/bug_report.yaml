@@ -1,10 +1,33 @@
 name: Bug report
-description: Create a report
+description: Report an ADetailer Custom issue
 title: "[Bug]: "
 labels:
   - bug
 
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an ADetailer Custom issue.
+        This tracker is for the non-official reForge / Forge Neo fork only. Please do not report fork-specific issues to upstream ADetailer.
+
+  - type: dropdown
+    attributes:
+      label: WebUI
+      description: Select the WebUI where the issue happens.
+      options:
+        - Forge Neo
+        - reForge
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: ADetailer Custom version
+      description: Copy this from the generated image metadata or startup log if available.
+      placeholder: "1.0.0"
+
   - type: textarea
     attributes:
       label: Describe the bug
@@ -59,3 +82,4 @@ body:
   - type: textarea
     attributes:
       label: List of installed extensions
+      description: If possible, include other always-on or image-processing extensions.

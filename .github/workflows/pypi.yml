@@ -1,20 +1,15 @@
-name: Publish to PyPI
+name: Build package
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
 
 jobs:
   test:
-    name: test
+    name: Test
     uses: ./.github/workflows/test.yml
 
   build:
-    name: build
+    name: Build wheel
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     needs: [test]
 
     steps:
@@ -23,6 +18,3 @@ jobs:
 
       - name: Build wheel
         run: uv build
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1

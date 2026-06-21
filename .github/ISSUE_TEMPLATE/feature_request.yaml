@@ -1,10 +1,26 @@
 name: Feature request
-description: Suggest an idea for this project
+description: Suggest an idea for ADetailer Custom
 title: "[Feature Request]: "
 labels:
   - enhancement
 
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement for ADetailer Custom.
+        This tracker is for the non-official reForge / Forge Neo fork only.
+
+  - type: dropdown
+    attributes:
+      label: Target WebUI
+      description: Select where this feature would be used.
+      options:
+        - Forge Neo
+        - reForge
+        - Both Forge Neo and reForge
+        - Other / not sure
+
   - type: textarea
     attributes:
       label: Is your feature request related to a problem? Please describe.

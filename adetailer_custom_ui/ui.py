@@ -781,7 +781,7 @@ def controlnet(w: Widgets, n: int, is_img2img: bool):
         with gr.Column(variant="compact"):
             w.ad_controlnet_model = gr.Dropdown(
                 label="ControlNet model",
-                tooltip="ControlNet or LLLite model used only during the ADetailer pass.",
+                tooltip="ControlNet or LLLite model used only during the ADetailer pass. Passthrough keeps existing ControlNet units instead of adding a new ADetailer unit.",
                 choices=cn_models,
                 value="None",
                 visible=True,

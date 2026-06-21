@@ -91,7 +91,7 @@ git -C "path\to\extensions\ADetailer Custom" pull
 WebUI環境では多くのPythonパッケージを共有しているため、このインストーラーは保守的に動作します。
 
 - reForge / Forge Neo / WebUI系の環境では、`install.py` はADetailer向けパッケージ
-  (`ultralytics`, `mediapipe`, `rich`) だけを、標準では `--no-deps` 付きでインストールします。
+  (`huggingface-hub`, `ultralytics`, `mediapipe`, `rich`) だけを、標準では `--no-deps` 付きでインストールします。
 - Pillow, numpy, opencv, protobuf, gradio, diffusers, torch などの共有パッケージは、
   この拡張のインストーラーから意図的にアップグレードしません。
 - 通常の依存解決を明示的に許可したい場合は、起動前に `ADETAILER_INSTALL_DEPS=1` を設定してください。
@@ -105,6 +105,9 @@ Windows例:
 ```powershell
 "path\to\reForge\venv\Scripts\python.exe" -m pip install --force-reinstall "Pillow==10.4.0"
 ```
+
+起動時にHugging Faceから標準検出モデルを自動取得したくない場合は、起動引数に `--ad-custom-no-huggingface` を追加してください。
+その場合は、必要な `.pt` モデルを `models/adetailer` に手動で置いてください。
 
 ### 基本的な使い方
 
@@ -164,6 +167,7 @@ Anima / LLLiteで手やポーズを変える場合のように、画像全体の
 
 Forge ControlNet / LLLiteインペイントモデルでは、次を目安にしてください。
 
+- `Passthrough` は、メイン画面や他スクリプトで設定済みのControlNetをADetailer処理にもそのまま残すための選択肢です。ADetailer専用のControlNetモデルを新しく追加する設定ではありません。
 - モデルが特定のプリプロセッサを要求しない限り、プリプロセッサは `None` を使います。
 - Anima LLLite系インペイントモデルは、多くの場合 `None` が適しています。
 - NoobAI系インペイントモデルでは、一覧に対応するinpaintプリプロセッサがある場合、それを使います。
@@ -323,7 +327,7 @@ For normal use, enable only `ADetailer Custom`.
 WebUI environments share many Python packages, so this installer is conservative.
 
 - In reForge / Forge Neo / webui-like environments, `install.py` installs only
-  ADetailer-target packages (`ultralytics`, `mediapipe`, `rich`) with
+  ADetailer-target packages (`huggingface-hub`, `ultralytics`, `mediapipe`, `rich`) with
   `--no-deps` by default.
 - Shared packages such as Pillow, numpy, opencv, protobuf, gradio, diffusers,
   and torch are not intentionally upgraded by this extension installer.
@@ -341,6 +345,11 @@ Windows example:
 ```powershell
 "path\to\reForge\venv\Scripts\python.exe" -m pip install --force-reinstall "Pillow==10.4.0"
 ```
+
+If you do not want ADetailer Custom to auto-download the default detector
+models from Hugging Face at startup, add `--ad-custom-no-huggingface` to your
+launch arguments. In that case, place the required `.pt` models in
+`models/adetailer` manually.
 
 ### Basic Workflow
 
@@ -411,6 +420,9 @@ the better starting point.
 
 For Forge ControlNet / LLLite inpaint models:
 
+- `Passthrough` keeps ControlNet units that are already configured in the main
+  UI or other scripts during the ADetailer pass. It does not add a new
+  ADetailer-specific ControlNet model.
 - Use `None` as the preprocessor unless the model specifically requires a
   preprocessor.
 - Anima LLLite inpaint models usually work best with preprocessor `None`.

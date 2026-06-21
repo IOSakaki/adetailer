@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-06-21
+
+- Updated GitHub Actions paths for the renamed `adetailer_custom` package.
+- Disabled automatic PyPI publishing and automatic stale issue closing workflows.
+- Fixed the ControlNet extension unit test path after package renaming.
+- Clarified fork maintainership metadata and issue templates.
+- Added `huggingface-hub` to the conservative installer dependency set.
+- Documented `--ad-custom-no-huggingface` and the `Passthrough` ControlNet option.
+- Added Japanese localization entries for ADetailer Custom settings labels.
+
 ## 2026-06-20
 
 - v1.0.0-custom
